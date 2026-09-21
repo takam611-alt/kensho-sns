@@ -332,30 +332,23 @@ function renderTalkMessages(messages){
     const mine=m.sender_id===state.me?.id;
     const deleted=m.deleted_for_all;
     const reply=m.reply_preview?`<button class="reply-preview" data-jump="${m.reply_preview.id}"><small>${m.reply_preview.sender_id===state.me?.id?"自分":"相手"}</small>${esc(m.reply_preview.body)}</button>`:"";
+    const timeLabel=`${talkTime(m.created_at)}${mine && m.read_at?" ・ 既読":""}`;
     return `<div class="talk-bubble-wrap ${mine?"me":""}" data-message="${m.id}">
       <div class="message-stack">
         ${reply}
         <div class="talk-bubble ${deleted?"deleted":""}" data-action-message="${m.id}">
           <span class="message-text">${deleted?"メッセージを削除しました":esc(m.body)}</span>
-          <span class="talk-time">${talkTime(m.created_at)}${mine && m.read_at?" ・ 既読":""}</span>
         </div>
-        ${!deleted?`<div class="message-reactions">
-          <button class="message-like ${m.reacted_by_me?"active":""}" data-like-message="${m.id}">♡${m.reaction_count?` ${m.reaction_count}`:""}</button>
-        </div>`:""}
+        <div class="message-meta ${mine?"me":""}">
+          ${!deleted?`<div class="reaction-summary">${(m.reaction_summary||[]).map(r=>`<button class="reaction-chip ${m.my_reaction===r.emoji?"mine":""}" data-react-chip="${m.id}" data-emoji="${r.emoji}">${r.emoji}${r.count>1?` ${r.count}`:""}</button>`).join("")}</div>`:`<span class="message-meta-spacer"></span>`}
+          <span class="talk-time-outside">${timeLabel}</span>
+        </div>
       </div>
     </div>`;
   }).join(""):'<div class="comments-empty">'+(q?"見つかりませんでした。":"まだメッセージはありません。")+'</div>';
 
-  $$("[data-like-message]").forEach(b=>b.onclick=()=>toggleMessageLike(b.dataset.likeMessage));
-  $$("[data-action-message]").forEach(b=>{
-    let lastTap=0;
-    b.onclick=e=>{
-      const now=Date.now();
-      if(now-lastTap<320){ lastTap=0; toggleMessageLike(b.dataset.actionMessage); return; }
-      lastTap=now;
-      setTimeout(()=>{ if(Date.now()-lastTap>=300 && lastTap){ openMessageActions(b.dataset.actionMessage); lastTap=0; } },320);
-    };
-  });
+  $$("[data-react-chip]").forEach(b=>b.onclick=()=>setMessageReaction(b.dataset.reactChip,b.dataset.emoji));
+  $$("[data-action-message]").forEach(b=>bindMessagePressActions(b, b.dataset.actionMessage));
   $$(".reply-preview").forEach(b=>b.onclick=e=>{
     e.stopPropagation();
     jumpToMessage(b.dataset.jump);
@@ -387,13 +380,79 @@ async function loadTalkMessages(forceScroll=false){
   }catch(e){}
 }
 
-async function toggleMessageLike(id){
+async function setMessageReaction(id, emoji="❤️"){
   try{
-    await api("toggle_message_reaction",{message_id:id});
+    await api("toggle_message_reaction",{message_id:id,emoji});
     await loadTalkMessages(false);
   }catch(e){alert(e.message)}
 }
+async function toggleMessageLike(id){
+  return setMessageReaction(id,"❤️");
+}
 
+
+function bindMessagePressActions(el, id){
+  let pressTimer = null;
+  let longPressed = false;
+  let lastTap = 0;
+  let startX = 0;
+  let startY = 0;
+
+  const clearPress = ()=>{
+    if(pressTimer){
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+  };
+  const startPress = (x, y)=>{
+    clearPress();
+    longPressed = false;
+    startX = x;
+    startY = y;
+    pressTimer = setTimeout(()=>{
+      longPressed = true;
+      openMessageActions(id);
+      if(navigator.vibrate) navigator.vibrate(10);
+    }, 380);
+  };
+  const movePress = (x, y)=>{
+    if(Math.abs(x - startX) > 10 || Math.abs(y - startY) > 10){
+      clearPress();
+    }
+  };
+  const endPress = ()=>{
+    clearPress();
+    if(longPressed) return;
+    const now = Date.now();
+    if(now - lastTap < 300){
+      lastTap = 0;
+      toggleMessageLike(id);
+    }else{
+      lastTap = now;
+    }
+  };
+
+  el.ontouchstart = e=>{
+    if(e.touches.length !== 1) return;
+    const t = e.touches[0];
+    startPress(t.clientX, t.clientY);
+  };
+  el.ontouchmove = e=>{
+    if(!e.touches.length) return;
+    const t = e.touches[0];
+    movePress(t.clientX, t.clientY);
+  };
+  el.ontouchend = ()=>endPress();
+  el.ontouchcancel = ()=>clearPress();
+
+  el.onmousedown = e=>{
+    if(e.button !== 0) return;
+    startPress(e.clientX, e.clientY);
+  };
+  el.onmousemove = e=>movePress(e.clientX, e.clientY);
+  el.onmouseup = ()=>endPress();
+  el.onmouseleave = ()=>clearPress();
+}
 function openMessageActions(id){
   const m=state.talkMessages.find(x=>x.id===id);
   if(!m || m.deleted_for_all) return;
@@ -401,6 +460,16 @@ function openMessageActions(id){
   $("#actionDeleteAll").classList.toggle("hidden", m.sender_id!==state.me?.id);
   $("#messageActionsDialog").showModal();
 }
+
+$$("[data-reaction]").forEach(btn=>{
+  btn.onclick=async()=>{
+    const m=state.talkSelectedMessage;
+    if(!m) return;
+    const emoji=btn.dataset.reaction;
+    $("#messageActionsDialog").close();
+    await setMessageReaction(m.id,emoji);
+  };
+});
 
 function setReply(m){
   state.talkReplyTo=m;
