@@ -108,7 +108,29 @@ async function loadFeed(){
   }catch(e){$("#feed").innerHTML=`<div class="post-card"><div class="post-body">${esc(e.message)}</div></div>`}
 }
 async function toggleLike(btn){
-  try{await api("toggle_like",{post_id:btn.dataset.id});await loadFeed()}catch(e){alert(e.message)}
+  if(btn.disabled) return;
+  btn.disabled = true;
+  const wasLiked = btn.classList.contains("active");
+  const current = Number((btn.textContent.match(/\d+/)||[0])[0]);
+  const optimisticLiked = !wasLiked;
+  const optimisticCount = Math.max(0, current + (optimisticLiked ? 1 : -1));
+  btn.classList.toggle("active", optimisticLiked);
+  btn.textContent = `♡ ${optimisticCount}`;
+  try{
+    const d = await api("toggle_like",{post_id:btn.dataset.id});
+    const finalLiked = !!d.liked;
+    if(finalLiked !== optimisticLiked){
+      const finalCount = Math.max(0, optimisticCount + (finalLiked ? 1 : -1));
+      btn.classList.toggle("active", finalLiked);
+      btn.textContent = `♡ ${finalCount}`;
+    }
+  }catch(e){
+    btn.classList.toggle("active", wasLiked);
+    btn.textContent = `♡ ${current}`;
+    alert(e.message);
+  }finally{
+    btn.disabled = false;
+  }
 }
 async function openComments(id){
   state.currentPostId=id; $("#commentDialog").showModal(); await loadComments();
@@ -119,8 +141,26 @@ async function loadComments(){
     <div class="comment">${avatarHTML(c.members)}<div class="bubble"><strong>${esc(c.members?.display_name||"")}</strong><p>${esc(c.body)}</p></div></div>`).join(""):'<p>まだコメントはありません。</p>';
 }
 $("#commentForm").onsubmit=async e=>{
-  e.preventDefault(); const v=$("#commentInput").value.trim(); if(!v)return;
-  try{await api("add_comment",{post_id:state.currentPostId,body:v});$("#commentInput").value="";await loadComments();await loadFeed()}catch(err){alert(err.message)}
+  e.preventDefault();
+  const input = $("#commentInput");
+  const v = input.value.trim();
+  if(!v) return;
+  const submit = e.currentTarget.querySelector("button[type=submit], button");
+  if(submit) submit.disabled = true;
+  try{
+    await api("add_comment",{post_id:state.currentPostId,body:v});
+    input.value = "";
+    await loadComments();
+    const feedBtn = document.querySelector(`.comment-btn[data-id="${state.currentPostId}"]`);
+    if(feedBtn){
+      const current = Number((feedBtn.textContent.match(/\d+/)||[0])[0]);
+      feedBtn.textContent = `💬 ${current + 1}`;
+    }
+  }catch(err){
+    alert(err.message);
+  }finally{
+    if(submit) submit.disabled = false;
+  }
 }
 
 $("#postImage").onchange=e=>{
