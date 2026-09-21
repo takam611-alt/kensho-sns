@@ -258,18 +258,30 @@ async function loadTalkList(){
     updateTalkBadge(d.unread_total||0);
     $("#talkUnread").textContent=d.unread_total?`未読 ${d.unread_total}`:"";
     box.innerHTML=d.conversations.length?d.conversations.map(c=>`
-      <button class="talk-row" data-peer="${c.peer.id}">
-        ${avatarHTML(c.peer)}
-        <div class="talk-row-main">
-          <div class="talk-row-name">${esc(c.peer.display_name)}</div>
-          <div class="talk-row-preview">${esc(c.last_message.body||"")}</div>
-        </div>
-        <div class="talk-row-meta">
-          <span class="talk-row-time">${talkTime(c.last_message.created_at)}</span>
-          ${c.unread_count?`<span class="talk-unread">${c.unread_count}</span>`:""}
-        </div>
-      </button>`).join(""):'<div class="post-card"><div class="post-body">まだトークはありません。</div></div>';
+      <div class="talk-row-wrap" data-peer-wrap="${c.peer.id}">
+        <button class="talk-row" data-peer="${c.peer.id}">
+          ${avatarHTML(c.peer)}
+          <div class="talk-row-main">
+            <div class="talk-row-name">${esc(c.peer.display_name)}</div>
+            <div class="talk-row-preview">${esc(c.last_message.body||"")}</div>
+          </div>
+          <div class="talk-row-meta">
+            <span class="talk-row-time">${talkTime(c.last_message.created_at)}</span>
+            ${c.unread_count?`<span class="talk-unread">${c.unread_count}</span>`:""}
+          </div>
+        </button>
+        <button class="talk-delete-btn" data-peer="${c.peer.id}" aria-label="トークを削除">•••</button>
+      </div>`).join(""):'<div class="post-card"><div class="post-body">まだトークはありません。</div></div>';
     $$(".talk-row").forEach(b=>b.onclick=()=>openTalk(b.dataset.peer));
+    $$(".talk-delete-btn").forEach(b=>b.onclick=async e=>{
+      e.stopPropagation();
+      if(!confirm("このトークを一覧から削除しますか？\n相手側の履歴は削除されません。")) return;
+      try{
+        await api("hide_talk",{peer_id:b.dataset.peer});
+        document.querySelector(`[data-peer-wrap="${b.dataset.peer}"]`)?.remove();
+        await loadTalkList();
+      }catch(err){ alert(err.message); }
+    });
   }catch(e){
     box.innerHTML=`<div class="post-card"><div class="post-body">${esc(e.message)}</div></div>`;
   }
