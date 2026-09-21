@@ -1712,3 +1712,167 @@ html, body{
   -webkit-user-select:none!important;
   user-select:none!important;
 }
+
+/* --- v27 talk polish --- */
+
+/* keep bottom tabs visible even while a talk thread is open */
+body.talk-thread-open .bottom-nav{
+  display:flex!important;
+  z-index:40!important;
+}
+body.talk-thread-open .compose-fab{
+  display:none!important;
+}
+
+/* let the thread live above the app but leave room for persistent tabs */
+#talkThreadView:not(.hidden){
+  z-index:25!important;
+  top:0!important;
+  bottom:calc(82px + env(safe-area-inset-bottom))!important;
+  height:auto!important;
+  width:100%!important;
+  max-width:760px!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+}
+@media(max-width:600px){
+  #talkThreadView:not(.hidden){
+    left:0!important;
+    transform:none!important;
+  }
+}
+
+/* balance avatar/message position in the thread */
+.talk-bubble-wrap{
+  align-items:flex-start!important;
+  gap:10px!important;
+}
+.talk-bubble-wrap.me{
+  justify-content:flex-end!important;
+}
+.talk-side-avatar{
+  align-self:flex-start!important;
+  margin-top:2px!important;
+}
+.talk-side-avatar .avatar.sm{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+}
+
+/* smooth message area scrolling without the top app title bouncing */
+body.talk-thread-open .topbar{
+  display:none!important;
+}
+body.talk-thread-open #mainView,
+body.talk-thread-open main,
+body.talk-thread-open #talkPage{
+  overflow:hidden!important;
+}
+.talk-messages{
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding-bottom:14px!important;
+}
+
+/* stronger suppression of native copy / callout UI */
+#talkMessages,
+#talkMessages *{
+  -webkit-touch-callout:none!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
+
+/* tabs further apart */
+.bottom-nav{
+  gap:32px!important;
+}
+@media(max-width:390px){
+  .bottom-nav{
+    gap:22px!important;
+  }
+}
+
+/* --- v28 message readability + time/read placement --- */
+
+/* incoming message bubble easier to see */
+.talk-bubble-wrap:not(.me) .talk-bubble{
+  background:rgba(255,255,255,.94)!important;
+  border:1px solid rgba(15,20,25,.10)!important;
+  box-shadow:0 1px 3px rgba(15,20,25,.06);
+  color:var(--text)!important;
+}
+body[data-theme="dark"] .talk-bubble-wrap:not(.me) .talk-bubble{
+  background:rgba(255,255,255,.08)!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  box-shadow:none!important;
+}
+body[data-theme="warm"] .talk-bubble-wrap:not(.me) .talk-bubble{
+  background:#fffdf9!important;
+}
+body[data-theme="blue"] .talk-bubble-wrap:not(.me) .talk-bubble{
+  background:#ffffff!important;
+}
+
+/* place time beside the bubble, with read above it */
+.bubble-row{
+  display:flex;
+  align-items:flex-end;
+  gap:7px;
+  width:100%;
+}
+.bubble-row.me{
+  justify-content:flex-end;
+}
+.message-side-meta{
+  flex:none;
+  min-width:36px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-end;
+  gap:2px;
+  padding-bottom:2px;
+}
+.message-side-meta.me{
+  align-items:flex-end;
+}
+.message-read-side{
+  font-size:9px;
+  line-height:1;
+  color:var(--muted);
+  white-space:nowrap;
+}
+.talk-time-side{
+  font-size:10px;
+  line-height:1;
+  color:var(--muted);
+  white-space:nowrap;
+}
+.talk-time-outside{
+  display:none!important;
+}
+.message-meta{
+  min-height:18px;
+  padding-top:2px!important;
+}
+.message-meta.me{
+  justify-content:flex-end;
+}
+.message-meta:not(.me){
+  justify-content:flex-start;
+}
+.reaction-summary{
+  display:flex;
+  align-items:center;
+  gap:3px;
+  flex-wrap:wrap;
+}
+
+/* preserve larger message readability */
+.talk-bubble{
+  font-size:15px!important;
+  line-height:1.5!important;
+}

@@ -333,19 +333,25 @@ function renderTalkMessages(messages){
     const mine=m.sender_id===state.me?.id;
     const deleted=m.deleted_for_all;
     const reply=m.reply_preview?`<button class="reply-preview" data-jump="${m.reply_preview.id}"><small>${m.reply_preview.sender_id===state.me?.id?"自分":"相手"}</small>${esc(m.reply_preview.body)}</button>`:"";
-    const timeLabel=`${talkTime(m.created_at)}${mine && m.read_at?" ・ 既読":""}`;
+    const timeOnly=talkTime(m.created_at);
+    const readLabel=mine && m.read_at ? `<span class="message-read-side">既読</span>` : `<span class="message-read-side hidden"></span>`;
     const sideAvatar = !mine ? `<div class="talk-side-avatar">${avatarHTML(state.talkPeerInfo,"sm")}</div>` : "";
     return `<div class="talk-bubble-wrap ${mine?"me":""}" data-message="${m.id}">
       ${sideAvatar}
       <div class="message-stack">
         ${reply}
-        <div class="talk-bubble ${deleted?"deleted":""}" data-action-message="${m.id}">
-          <span class="message-text">${deleted?"メッセージを削除しました":esc(m.body)}</span>
+        <div class="bubble-row ${mine?"me":""}">
+          <div class="talk-bubble ${deleted?"deleted":""}" data-action-message="${m.id}">
+            <span class="message-text">${deleted?"メッセージを削除しました":esc(m.body)}</span>
+          </div>
+          <div class="message-side-meta ${mine?"me":""}">
+            ${readLabel}
+            <span class="talk-time-side">${timeOnly}</span>
+          </div>
         </div>
-        <div class="message-meta ${mine?"me":""}">
-          ${!deleted?`<div class="reaction-summary">${(m.reaction_summary||[]).map(r=>`<button class="reaction-chip ${m.my_reaction===r.emoji?"mine":""}" data-react-chip="${m.id}" data-emoji="${r.emoji}">${r.emoji}${r.count>1?` ${r.count}`:""}</button>`).join("")}</div>`:`<span class="message-meta-spacer"></span>`}
-          <span class="talk-time-outside">${timeLabel}</span>
-        </div>
+        ${!deleted?`<div class="message-meta ${mine?"me":""}">
+          <div class="reaction-summary">${(m.reaction_summary||[]).map(r=>`<button class="reaction-chip ${m.my_reaction===r.emoji?"mine":""}" data-react-chip="${m.id}" data-emoji="${r.emoji}">${r.emoji}${r.count>1?` ${r.count}`:""}</button>`).join("")}</div>
+        </div>`:`<div class="message-meta ${mine?"me":""}"><span class="message-meta-spacer"></span></div>`}
       </div>
     </div>`;
   }).join(""):'<div class="comments-empty">'+(q?"見つかりませんでした。":"まだメッセージはありません。")+'</div>';
@@ -825,3 +831,31 @@ if(homePage){
 }
 
 boot();
+
+
+/* suppress iPhone native copy/select popups in talk messages */
+function clearTalkSelectionIfNeeded(){
+  const sel = window.getSelection ? window.getSelection() : null;
+  if(!sel || !sel.rangeCount) return;
+  const anchorNode = sel.anchorNode;
+  const el = anchorNode && anchorNode.parentElement ? anchorNode.parentElement : null;
+  if(document.body.classList.contains("talk-thread-open") && el && el.closest && el.closest("#talkMessages")){
+    try{ sel.removeAllRanges(); }catch(e){}
+  }
+}
+document.addEventListener("contextmenu", e=>{
+  if(document.body.classList.contains("talk-thread-open") && e.target.closest && e.target.closest("#talkMessages")){
+    e.preventDefault();
+  }
+}, {capture:true});
+
+document.addEventListener("selectstart", e=>{
+  if(document.body.classList.contains("talk-thread-open") && e.target.closest && e.target.closest("#talkMessages")){
+    e.preventDefault();
+  }
+}, {capture:true});
+
+document.addEventListener("selectionchange", ()=>{
+  clearTalkSelectionIfNeeded();
+}, {capture:true});
+
