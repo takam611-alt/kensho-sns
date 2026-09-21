@@ -48,6 +48,7 @@ const state = {
   talkSelectedMessage: null,
   talkMuted: false,
   talkTypingTimer: null,
+  talkPeerInfo: null,
 };
 
 async function call(url, payload) {
@@ -333,7 +334,9 @@ function renderTalkMessages(messages){
     const deleted=m.deleted_for_all;
     const reply=m.reply_preview?`<button class="reply-preview" data-jump="${m.reply_preview.id}"><small>${m.reply_preview.sender_id===state.me?.id?"自分":"相手"}</small>${esc(m.reply_preview.body)}</button>`:"";
     const timeLabel=`${talkTime(m.created_at)}${mine && m.read_at?" ・ 既読":""}`;
+    const sideAvatar = !mine ? `<div class="talk-side-avatar">${avatarHTML(state.talkPeerInfo,"sm")}</div>` : "";
     return `<div class="talk-bubble-wrap ${mine?"me":""}" data-message="${m.id}">
+      ${sideAvatar}
       <div class="message-stack">
         ${reply}
         <div class="talk-bubble ${deleted?"deleted":""}" data-action-message="${m.id}">
@@ -361,6 +364,7 @@ async function loadTalkMessages(forceScroll=false){
   try{
     const d=await api("talk_messages",{peer_id:state.talkPeer});
     state.talkMessages=d.messages||[];
+    state.talkPeerInfo=d.peer || null;
     state.talkMuted=!!d.muted;
     $("#talkPeer").innerHTML=`${avatarHTML(d.peer)}<div><span>${esc(d.peer.display_name)}</span><small>${d.online?"オンライン":"オフライン"}</small></div>`;
     $("#typingIndicator").classList.toggle("hidden", !d.typing);
@@ -504,8 +508,6 @@ function openMessageActions(id){
   state.talkSelectedMessage=m;
 
   const mine=m.sender_id===state.me?.id;
-  const preview=$("#messageActionPreview");
-  preview.innerHTML=`<div class="message-preview-bubble ${mine?"me":""}">${esc(messageBodyText(m))}<span>${talkTime(m.created_at)}</span></div>`;
 
   const dlg=$("#messageActionsDialog");
   const bubble=document.querySelector(`[data-action-message="${id}"]`);

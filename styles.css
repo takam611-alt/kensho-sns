@@ -1607,3 +1607,108 @@ html, body{
 .context-row{
   display:none!important;
 }
+
+/* --- v26 requested adjustments --- */
+
+/* chat thread should scroll internally without the global header shifting */
+body.talk-thread-open{
+  overflow:hidden!important;
+}
+body.talk-thread-open .topbar{
+  display:none!important;
+}
+body.talk-thread-open #mainView,
+body.talk-thread-open main,
+body.talk-thread-open #talkPage{
+  height:100svh!important;
+  overflow:hidden!important;
+  padding-bottom:0!important;
+}
+#talkThreadView:not(.hidden){
+  top:0!important;
+  height:var(--vvh,100dvh)!important;
+}
+.talk-thread-head{
+  padding-top:env(safe-area-inset-top)!important;
+  height:calc(46px + env(safe-area-inset-top))!important;
+  min-height:calc(46px + env(safe-area-inset-top))!important;
+}
+.talk-messages{
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+
+/* show peer icon beside talk messages */
+.talk-bubble-wrap{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+}
+.talk-bubble-wrap.me{
+  justify-content:flex-end;
+}
+.talk-side-avatar{
+  flex:none;
+  width:28px;
+  height:28px;
+  display:flex;
+  align-items:flex-end;
+}
+.talk-side-avatar .avatar.sm{
+  width:28px;
+  height:28px;
+  min-width:28px;
+  border-radius:50%;
+  object-fit:cover;
+  font-size:12px;
+}
+.talk-side-avatar .avatar.fallback.sm{
+  display:grid;
+  place-items:center;
+}
+
+/* keep reply preview directly above the input area */
+.reply-bar{
+  order:3;
+  border-top:1px solid var(--line);
+  border-bottom:0!important;
+  background:var(--card);
+}
+.typing-indicator{
+  order:2;
+  background:var(--card);
+}
+.talk-form{
+  order:4;
+}
+
+/* simpler long-press sheet without target message preview */
+.message-action-preview{
+  display:none!important;
+}
+
+/* more spacing between floating tabs */
+.bottom-nav{
+  gap:26px!important;
+}
+@media(max-width:390px){
+  .bottom-nav{
+    gap:18px!important;
+  }
+}
+
+/* while in thread, no horizontal wiggle during scroll */
+html, body{
+  overflow-x:hidden!important;
+}
+
+#talkMessages,
+.talk-bubble,
+.message-text,
+.talk-bubble-wrap{
+  -webkit-touch-callout:none!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}

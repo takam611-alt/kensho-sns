@@ -9,7 +9,7 @@
     .hidden{display:none!important}
     #loadingView{position:fixed;inset:0;z-index:9999;background:#fff}
   </style>
-  <link rel="stylesheet" href="styles.css?v=25">
+  <link rel="stylesheet" href="styles.css?v=26">
 </head>
 <body>
   <div id="appShell">
@@ -128,14 +128,14 @@
               <span>📌</span><span id="pinnedMessageText"></span>
             </button>
 
+            <div id="talkMessages" class="talk-messages"></div>
+
+            <div id="typingIndicator" class="typing-indicator hidden">入力中…</div>
+
             <div id="replyBar" class="reply-bar hidden">
               <div><small>返信</small><div id="replyBarText"></div></div>
               <button id="cancelReply" class="icon-btn" type="button">✕</button>
             </div>
-
-            <div id="talkMessages" class="talk-messages"></div>
-
-            <div id="typingIndicator" class="typing-indicator hidden">入力中…</div>
 
             <form id="talkForm" class="talk-form">
               <input id="talkInput" maxlength="2000" placeholder="メッセージ" autocomplete="off">
@@ -233,7 +233,6 @@
         <button type="button" data-reaction="🙏">🙏</button>
       </div>
 
-      <div id="messageActionPreview" class="message-action-preview"></div>
 
       <div class="context-quick-actions">
         <button id="actionCopy" class="quick-action-btn" type="button">
@@ -287,6 +286,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=25"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>
