@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#fff7ed">
   <title>ゆでたまSNS</title>
+  <style>
+    .hidden{display:none!important}
+    #loadingView{position:fixed;inset:0;z-index:9999;background:#fff}
+  </style>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,7 +23,7 @@
       <div class="loading-text">ゆでたまSNS</div>
     </section>
 
-    <section id="authView" class="auth-screen hidden">
+    <section id="authView" class="auth-screen hidden" hidden>
       <div class="auth-bg"></div>
       <div class="auth-card-wrap">
         <div class="brand-hero compact-brand">
@@ -64,7 +68,7 @@
       </div>
     </section>
 
-    <section id="mainView" class="hidden">
+    <section id="mainView">
       <header class="topbar glass">
         <div class="topbar-left">
           <div class="egg-icon" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><ellipse cx="24" cy="24" rx="17" ry="20" fill="#fff" stroke="#cfd9de" stroke-width="2"/><circle cx="24" cy="25" r="8" fill="#f4b400"/><circle cx="21" cy="22" r="2.2" fill="#ffd45c" opacity=".95"/></svg></div>
@@ -79,6 +83,15 @@
 
       <main>
         <section id="homePage" class="page">
+          <div id="feedLoading" class="feed-loading">
+            <div class="egg-loader small" aria-label="読み込み中">
+              <div class="egg-shadow"></div>
+              <div class="egg-body">
+                <div class="egg-yolk"></div>
+              </div>
+            </div>
+            <div class="feed-loading-text">つぶやきを読み込み中…</div>
+          </div>
           <div id="feed" class="feed"></div>
         </section>
 

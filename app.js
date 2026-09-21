@@ -7,11 +7,25 @@ const API_URL = `${SUPABASE_URL}/functions/v1/sns-api`;
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const APP_NAME = "ゆでたまSNS";
+const LOAD_STARTED_AT = performance.now();
+const MIN_LOADING_MS = 1000;
 
-function hideLoading(){
+async function hideLoading(){
   const loader = document.querySelector("#loadingView");
-  if (loader) loader.classList.add("hidden");
+  if (!loader) return;
+  const elapsed = performance.now() - LOAD_STARTED_AT;
+  const wait = Math.max(0, MIN_LOADING_MS - elapsed);
+  if (wait) await new Promise(r => setTimeout(r, wait));
+  loader.classList.add("hidden");
 }
+
+function setShellLoading(isLoading){
+  const loading = document.querySelector("#feedLoading");
+  const feed = document.querySelector("#feed");
+  if (loading) loading.classList.toggle("hidden", !isLoading);
+  if (feed) feed.classList.toggle("hidden", isLoading);
+}
+
 const REGISTER_CODE = "472B76AEED";
 
 const state = {
@@ -53,25 +67,34 @@ function avatarHTML(m,size=""){
   if(m?.avatar_url) return `<img class="avatar ${size}" src="${esc(m.avatar_url)}" alt="">`;
   return `<div class="avatar fallback ${size}">${initials(m?.display_name||"?")}</div>`;
 }
-function showAuth(msg=""){
-  $("#authView").classList.remove("hidden");
-  $("#mainView").classList.add("hidden");
+async function showAuth(msg=""){
   $("#authMsg").textContent=msg;
-  hideLoading();
+  const auth = $("#authView");
+  const main = $("#mainView");
+  auth.hidden = false;
+  auth.classList.remove("hidden");
+  main.hidden = true;
+  main.classList.add("hidden");
+  await hideLoading();
 }
-function showMain(){
-  $("#authView").classList.add("hidden");
-  $("#mainView").classList.remove("hidden");
+async function showMain(){
+  const auth = $("#authView");
+  const main = $("#mainView");
+  auth.hidden = true;
+  auth.classList.add("hidden");
+  main.hidden = false;
+  main.classList.remove("hidden");
+  setShellLoading(true);
   document.title = APP_NAME;
-  hideLoading();
+  await hideLoading();
 }
 async function boot(){
-  if(!state.token) return showAuth();
+  if(!state.token) return await showAuth();
   try{
     const d=await call(AUTH_URL,{action:"me",token:state.token});
-    state.me=d.member; showMain(); await loadFeed();
+    state.me=d.member; await showMain(); await loadFeed();
   }catch(e){
-    localStorage.removeItem("kensho_session"); state.token=""; showAuth("もう一度ログインしてください");
+    localStorage.removeItem("kensho_session"); state.token=""; await showAuth("もう一度ログインしてください");
   }
 }
 function setSession(d){
@@ -96,11 +119,15 @@ $("#registerForm").onsubmit=async e=>{
 
 function countOf(v){return Array.isArray(v)&&v[0]?.count ? v[0].count : 0}
 async function loadFeed(){
-  $("#feed").innerHTML='<div class="post-card"><div class="post-body">読み込み中…</div></div>';
+  setShellLoading(true);
   try{
     const d=await api("feed");
 
-    if(!d.posts.length){$("#feed").innerHTML='<div class="post-card"><div class="post-body">まだ投稿がありません。最初の投稿をしてみよう！</div></div>';return}
+    if(!d.posts.length){
+      $("#feed").innerHTML='<div class="post-card"><div class="post-body">まだ投稿がありません。最初の投稿をしてみよう！</div></div>';
+      setShellLoading(false);
+      return
+    }
     $("#feed").innerHTML=d.posts.map(p=>`
       <article class="post-card" data-id="${p.id}">
         <div class="post-head">${avatarHTML(p.members)}
@@ -115,7 +142,11 @@ async function loadFeed(){
       </article>`).join("");
     $$(".like-btn").forEach(b=>b.onclick=()=>toggleLike(b));
     $$(".comment-btn").forEach(b=>b.onclick=()=>openComments(b.dataset.id));
-  }catch(e){$("#feed").innerHTML=`<div class="post-card"><div class="post-body">${esc(e.message)}</div></div>`}
+    setShellLoading(false);
+  }catch(e){
+    $("#feed").innerHTML=`<div class="post-card"><div class="post-body">${esc(e.message)}</div></div>`;
+    setShellLoading(false);
+  }
 }
 async function toggleLike(btn){
   if(btn.disabled) return;
