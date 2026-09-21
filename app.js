@@ -7,6 +7,7 @@ const API_URL = `${SUPABASE_URL}/functions/v1/sns-api`;
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const APP_NAME = "ゆでたまSNS";
+const REGISTER_CODE = "472B76AEED";
 
 const state = {
   token: localStorage.getItem("kensho_session") || "",
@@ -79,11 +80,10 @@ $("#loginForm").onsubmit=async e=>{
 }
 $("#registerForm").onsubmit=async e=>{
   e.preventDefault(); $("#authMsg").textContent="";
-  try{setSession(await call(AUTH_URL,{action:"register",invite_code:$("#inviteCode").value,name:$("#registerName").value,pin:$("#registerPin").value}))}
+  try{setSession(await call(AUTH_URL,{action:"register",invite_code:REGISTER_CODE,name:$("#registerName").value,pin:$("#registerPin").value}))}
   catch(err){$("#authMsg").textContent=err.message}
 }
 
-function typeLabel(t){return {kensho:"🎁 懸賞",win:"🎉 当選報告",poll:"📊 アンケート"}[t]||""}
 function countOf(v){return Array.isArray(v)&&v[0]?.count ? v[0].count : 0}
 async function loadFeed(){
   $("#feed").innerHTML='<div class="post-card"><div class="post-body">読み込み中…</div></div>';
@@ -96,7 +96,7 @@ async function loadFeed(){
         <div class="post-head">${avatarHTML(p.members)}
           <div class="post-meta"><div class="post-name">${esc(p.members?.display_name||"")}</div><div class="post-time">${when(p.created_at)}</div></div>
         </div>
-        <div class="post-body">${typeLabel(p.post_type)?`<span class="badge">${typeLabel(p.post_type)}</span><br>`:""}${esc(p.body||"")}</div>
+        <div class="post-body">${esc(p.body||"")}</div>
         ${p.image_url?`<img class="post-image" src="${esc(p.image_url)}" alt="">`:""}
         <div class="post-actions">
           <button class="like-btn ${p.liked_by_me?"active":""}" data-id="${p.id}">♡ ${countOf(p.likes)}</button>
@@ -123,7 +123,6 @@ $("#commentForm").onsubmit=async e=>{
   try{await api("add_comment",{post_id:state.currentPostId,body:v});$("#commentInput").value="";await loadComments();await loadFeed()}catch(err){alert(err.message)}
 }
 
-$$(".chip").forEach(c=>c.onclick=()=>{$$(".chip").forEach(x=>x.classList.remove("active"));c.classList.add("active");state.postType=c.dataset.type});
 $("#postImage").onchange=e=>{
   const f=e.target.files[0]; $("#postPreview").innerHTML=f?`<img src="${URL.createObjectURL(f)}" alt="">`:"";
 }
@@ -132,7 +131,7 @@ $("#submitPost").onclick=async()=>{
   try{
     let imagePath=null; const f=$("#postImage").files[0];
     if(f){$("#postMsg").textContent="画像をアップロード中…";imagePath=(await upload(f,"post")).path}
-    await api("create_post",{body:$("#postBody").value,post_type:state.postType,image_path:imagePath});
+    await api("create_post",{body:$("#postBody").value,post_type:"normal",image_path:imagePath});
     $("#postBody").value="";$("#postImage").value="";$("#postPreview").innerHTML="";$("#postMsg").textContent="投稿しました";
     await go("homePage"); await loadFeed();
   }catch(e){$("#postMsg").textContent=e.message}
@@ -164,6 +163,7 @@ $("#logoutBtn").onclick=async()=>{
 $("#refreshBtn").onclick=()=>loadFeed();
 
 async function go(id){
+  window.scrollTo({top:0,left:0,behavior:"instant"});
   $$(".page").forEach(p=>p.classList.add("hidden"));$("#"+id).classList.remove("hidden");
   $$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
   if(id==="membersPage")await loadMembers();

@@ -22,9 +22,9 @@ button{cursor:pointer}
 .auth-card-wrap{width:min(100%,420px)}
 .brand-hero{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .compact-brand .brand-copy h1{font-size:22px;margin:0;font-weight:800}
-.brand-badge,.app-icon{display:grid;place-items:center;background:#0f1419;color:#fff;font-weight:800}
-.brand-badge{width:42px;height:42px;border-radius:50%;font-size:18px}
-.app-icon{width:34px;height:34px;border-radius:50%;font-size:14px}
+.egg-icon{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;background:#fff}
+.egg-icon svg{display:block;width:32px;height:32px}
+.brand-hero .egg-icon{width:42px;height:42px}.brand-hero .egg-icon svg{width:38px;height:38px}
 .auth-card,.sheet,.profile-card,.section-card{border-radius:0;padding:14px;border:1px solid var(--line)}
 .segmented{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);margin-bottom:14px}
 .segmented button{border:0;background:transparent;padding:10px 6px;color:var(--muted);font-weight:700;font-size:13px;position:relative}
@@ -88,3 +88,5 @@ dialog{border:0;border-radius:16px;width:min(95vw,520px);max-height:78vh;padding
 .comment-form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:#fff}.comment-form input{flex:1}.mini{padding:8px 11px}
 
 @media(max-width:780px){#mainView{border-left:0;border-right:0}}
+
+.page{scroll-margin-top:54px}

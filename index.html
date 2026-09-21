@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#fff7ed">
   <title>ゆでたまSNS</title>
   <link rel="stylesheet" href="styles.css">
@@ -13,7 +13,7 @@
       <div class="auth-bg"></div>
       <div class="auth-card-wrap">
         <div class="brand-hero compact-brand">
-          <div class="brand-badge">ゆ</div>
+          <div class="egg-icon" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><ellipse cx="24" cy="24" rx="17" ry="20" fill="#fff" stroke="#cfd9de" stroke-width="2"/><circle cx="24" cy="25" r="8" fill="#f4b400"/><circle cx="21" cy="22" r="2.2" fill="#ffd45c" opacity=".95"/></svg></div>
           <div class="brand-copy">
             <h1>ゆでたまSNS</h1>
           </div>
@@ -39,10 +39,6 @@
 
           <form id="registerForm" class="form modern-form hidden">
             <label>
-              <span>招待コード</span>
-              <input id="inviteCode" autocomplete="off" placeholder="招待コードを入力" required>
-            </label>
-            <label>
               <span>表示名</span>
               <input id="registerName" maxlength="30" placeholder="ニックネーム" required>
             </label>
@@ -61,7 +57,7 @@
     <section id="mainView" class="hidden">
       <header class="topbar glass">
         <div class="topbar-left">
-          <div class="app-icon">ゆ</div>
+          <div class="egg-icon" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><ellipse cx="24" cy="24" rx="17" ry="20" fill="#fff" stroke="#cfd9de" stroke-width="2"/><circle cx="24" cy="25" r="8" fill="#f4b400"/><circle cx="21" cy="22" r="2.2" fill="#ffd45c" opacity=".95"/></svg></div>
           <div>
             <h2>ゆでたまSNS</h2>
           </div>
@@ -80,12 +76,6 @@
           <div class="sheet glass compact-sheet">
             <div class="section-title-row">
               <h3>新しい投稿</h3>
-            </div>
-            <div class="chips">
-              <button data-type="normal" class="chip active">ふつう</button>
-              <button data-type="kensho" class="chip">懸賞</button>
-              <button data-type="win" class="chip">当選報告</button>
-              <button data-type="poll" class="chip">アンケート</button>
             </div>
             <textarea id="postBody" maxlength="5000" placeholder="何を共有する？"></textarea>
             <label class="file-btn modern-upload">📷 写真を追加<input id="postImage" type="file" accept="image/*" hidden></label>
@@ -133,7 +123,7 @@
         <button data-page="homePage" class="nav-item active"><span>🏠</span><small>ホーム</small></button>
         <button data-page="postPage" class="nav-item"><span>✏️</span><small>投稿</small></button>
         <button data-page="membersPage" class="nav-item"><span>👥</span><small>メンバー</small></button>
-        <button data-page="profilePage" class="nav-item"><span>🙂</span><small>マイ</small></button>
+        <button data-page="profilePage" class="nav-item"><span>🙂</span><small>Profile</small></button>
       </nav>
     </section>
   </div>
