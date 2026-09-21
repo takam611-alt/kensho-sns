@@ -2270,3 +2270,66 @@ main{
 .avatar-img.hidden{
   display:none!important;
 }
+
+/* --- v36 theme picker: circles only, one horizontal row --- */
+.theme-options,
+.theme-picker,
+.theme-grid{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:12px!important;
+}
+
+.theme-option{
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:50%!important;
+  border:2px solid transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  overflow:hidden!important;
+  box-shadow:0 1px 3px rgba(15,20,25,.10);
+}
+
+.theme-option[data-theme="light"]{
+  background:#ffffff!important;
+  border-color:#d9e1e5!important;
+}
+.theme-option[data-theme="dark"]{
+  background:#15202b!important;
+}
+.theme-option[data-theme="warm"]{
+  background:#f7d8bd!important;
+}
+.theme-option[data-theme="blue"]{
+  background:#cfe8ff!important;
+}
+
+.theme-option.active{
+  outline:3px solid var(--accent)!important;
+  outline-offset:2px!important;
+}
+
+.theme-option::before,
+.theme-option::after{
+  content:none!important;
+  display:none!important;
+}
+
+.sr-only{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
