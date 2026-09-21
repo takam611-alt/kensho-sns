@@ -2085,3 +2085,49 @@ body[data-active-page="membersPage"] main{
   min-height:0!important;
   padding-bottom:0!important;
 }
+
+/* --- v32 compact floating brand pill --- */
+
+/* remove the unused empty right side of the "ゆでたまSNS" band */
+.topbar{
+  left:calc(10px + env(safe-area-inset-left)) !important;
+  right:auto !important;
+  transform:none !important;
+  width:max-content !important;
+  max-width:calc(100vw - 20px - env(safe-area-inset-left) - env(safe-area-inset-right)) !important;
+  justify-content:flex-start !important;
+  padding:8px 11px !important;
+  border-radius:18px !important;
+}
+
+.topbar-left{
+  width:auto !important;
+  flex:none !important;
+}
+
+.topbar .egg-icon{
+  width:38px !important;
+  height:38px !important;
+}
+
+.topbar h2{
+  white-space:nowrap;
+  font-size:16px !important;
+}
+
+/* keep enough room for the compact floating pill */
+main{
+  padding-top:66px !important;
+}
+
+@media(max-width:390px){
+  .topbar{
+    left:8px !important;
+    width:max-content !important;
+    max-width:calc(100vw - 16px) !important;
+    padding:8px 10px !important;
+  }
+  main{
+    padding-top:64px !important;
+  }
+}
