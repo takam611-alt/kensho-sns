@@ -1,4 +1,4 @@
-# Kensho SNS
+# ゆでたまSNS
 
 招待制の小規模SNSです。
 

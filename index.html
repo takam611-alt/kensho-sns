@@ -3,66 +3,114 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#ffffff">
-  <title>Kensho SNS</title>
+  <meta name="theme-color" content="#fff7ed">
+  <title>ゆでたまSNS</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="app">
-    <section id="authView" class="auth-wrap">
-      <div class="brand">
-        <div class="brand-mark">K</div>
-        <h1>Kensho SNS</h1>
-        <p>招待メンバーだけのSNS</p>
-      </div>
-
-      <div class="auth-card">
-        <div class="segmented">
-          <button id="loginTab" class="active">ログイン</button>
-          <button id="registerTab">新規登録</button>
+  <div id="appShell">
+    <section id="authView" class="auth-screen">
+      <div class="auth-bg"></div>
+      <div class="auth-card-wrap">
+        <div class="brand-hero">
+          <div class="brand-badge">ゆ</div>
+          <div class="brand-copy">
+            <h1>ゆでたまSNS</h1>
+            <p>招待メンバーだけの、ゆるくつながるコミュニティ。</p>
+          </div>
         </div>
 
-        <form id="loginForm" class="form">
-          <label>名前<input id="loginName" autocomplete="username" maxlength="30" required></label>
-          <label>4桁PIN<input id="loginPin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" type="password" required></label>
-          <button class="primary" type="submit">ログイン</button>
-        </form>
+        <div class="auth-card glass">
+          <div class="segmented">
+            <button id="loginTab" class="active">ログイン</button>
+            <button id="registerTab">新規登録</button>
+          </div>
 
-        <form id="registerForm" class="form hidden">
-          <label>招待コード<input id="inviteCode" autocomplete="off" required></label>
-          <label>表示名<input id="registerName" maxlength="30" required></label>
-          <label>4桁PIN<input id="registerPin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" type="password" required></label>
-          <button class="primary" type="submit">登録してはじめる</button>
-        </form>
-        <p id="authMsg" class="message"></p>
+          <form id="loginForm" class="form modern-form">
+            <label>
+              <span>名前</span>
+              <input id="loginName" autocomplete="username" maxlength="30" placeholder="表示名" required>
+            </label>
+            <label>
+              <span>4桁PIN</span>
+              <input id="loginPin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" type="password" placeholder="1234" required>
+            </label>
+            <button class="primary" type="submit">ログインする</button>
+          </form>
+
+          <form id="registerForm" class="form modern-form hidden">
+            <label>
+              <span>招待コード</span>
+              <input id="inviteCode" autocomplete="off" placeholder="招待コードを入力" required>
+            </label>
+            <label>
+              <span>表示名</span>
+              <input id="registerName" maxlength="30" placeholder="ニックネーム" required>
+            </label>
+            <label>
+              <span>4桁PIN</span>
+              <input id="registerPin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" type="password" placeholder="1234" required>
+            </label>
+            <button class="primary" type="submit">登録してはじめる</button>
+          </form>
+
+          <p id="authMsg" class="message"></p>
+        </div>
       </div>
     </section>
 
     <section id="mainView" class="hidden">
-      <header class="topbar">
-        <div>
-          <div class="eyebrow">招待制コミュニティ</div>
-          <h2>Kensho SNS</h2>
+      <header class="topbar glass">
+        <div class="topbar-left">
+          <div class="app-icon">ゆ</div>
+          <div>
+            <div class="eyebrow">招待制コミュニティ</div>
+            <h2>ゆでたまSNS</h2>
+          </div>
         </div>
-        <button id="refreshBtn" class="icon-btn" aria-label="更新">↻</button>
+        <div class="topbar-actions">
+          <button id="refreshBtn" class="icon-btn" aria-label="更新">↻</button>
+        </div>
       </header>
 
       <main>
         <section id="homePage" class="page">
+          <div class="hero-panel">
+            <div class="hero-text">
+              <div class="eyebrow warm">WELCOME</div>
+              <h3 id="heroGreeting">おかえり</h3>
+              <p>みんなの投稿や当選報告を、ここで気軽にシェア。</p>
+            </div>
+            <div class="hero-stats">
+              <div class="stat-card">
+                <small>投稿</small>
+                <strong id="postCount">0</strong>
+              </div>
+              <div class="stat-card">
+                <small>メンバー</small>
+                <strong id="heroMemberCount">-</strong>
+              </div>
+            </div>
+          </div>
           <div id="feed" class="feed"></div>
         </section>
 
         <section id="postPage" class="page hidden">
-          <div class="sheet">
-            <h3>新しい投稿</h3>
+          <div class="sheet glass">
+            <div class="section-title-row">
+              <div>
+                <div class="eyebrow">CREATE</div>
+                <h3>新しい投稿</h3>
+              </div>
+            </div>
             <div class="chips">
               <button data-type="normal" class="chip active">ふつう</button>
               <button data-type="kensho" class="chip">懸賞</button>
               <button data-type="win" class="chip">当選報告</button>
               <button data-type="poll" class="chip">アンケート</button>
             </div>
-            <textarea id="postBody" maxlength="5000" placeholder="みんなに共有しよう"></textarea>
-            <label class="file-btn">📷 写真を追加<input id="postImage" type="file" accept="image/*" hidden></label>
+            <textarea id="postBody" maxlength="5000" placeholder="何を共有する？"></textarea>
+            <label class="file-btn modern-upload">📷 写真を追加<input id="postImage" type="file" accept="image/*" hidden></label>
             <div id="postPreview"></div>
             <button id="submitPost" class="primary">投稿する</button>
             <p id="postMsg" class="message"></p>
@@ -70,19 +118,36 @@
         </section>
 
         <section id="membersPage" class="page hidden">
-          <div class="section-head"><h3>メンバー</h3><span id="memberCount"></span></div>
+          <div class="section-head section-card glass">
+            <div>
+              <div class="eyebrow">MEMBERS</div>
+              <h3>メンバー</h3>
+            </div>
+            <span id="memberCount"></span>
+          </div>
           <div id="membersList" class="members"></div>
         </section>
 
         <section id="profilePage" class="page hidden">
-          <div class="profile-card">
-            <div class="avatar-wrap">
+          <div class="profile-card glass">
+            <div class="profile-cover"></div>
+            <div class="avatar-wrap profile-avatar-wrap">
               <img id="profileAvatar" class="avatar xl" alt="">
               <div id="profileFallback" class="avatar xl fallback">?</div>
             </div>
+            <div class="profile-headline">
+              <h3>プロフィール</h3>
+              <p>表示名やアイコンを変更できます</p>
+            </div>
             <label class="file-btn compact">アイコン変更<input id="avatarInput" type="file" accept="image/*" hidden></label>
-            <label>表示名<input id="profileName" maxlength="30"></label>
-            <label>ひとこと<textarea id="profileBio" maxlength="160"></textarea></label>
+            <label>
+              <span>表示名</span>
+              <input id="profileName" maxlength="30">
+            </label>
+            <label>
+              <span>ひとこと</span>
+              <textarea id="profileBio" maxlength="160" placeholder="ひとこと紹介"></textarea>
+            </label>
             <button id="saveProfile" class="primary">保存</button>
             <button id="logoutBtn" class="danger ghost">ログアウト</button>
             <p id="profileMsg" class="message"></p>
@@ -90,11 +155,11 @@
         </section>
       </main>
 
-      <nav class="bottom-nav">
-        <button data-page="homePage" class="nav-item active"><span>⌂</span><small>ホーム</small></button>
-        <button data-page="postPage" class="nav-item"><span>＋</span><small>投稿</small></button>
-        <button data-page="membersPage" class="nav-item"><span>◎</span><small>メンバー</small></button>
-        <button data-page="profilePage" class="nav-item"><span>◯</span><small>マイ</small></button>
+      <nav class="bottom-nav glass">
+        <button data-page="homePage" class="nav-item active"><span>🏠</span><small>ホーム</small></button>
+        <button data-page="postPage" class="nav-item"><span>✏️</span><small>投稿</small></button>
+        <button data-page="membersPage" class="nav-item"><span>👥</span><small>メンバー</small></button>
+        <button data-page="profilePage" class="nav-item"><span>🙂</span><small>マイ</small></button>
       </nav>
     </section>
   </div>

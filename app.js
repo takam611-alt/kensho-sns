@@ -6,6 +6,8 @@ const API_URL = `${SUPABASE_URL}/functions/v1/sns-api`;
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
+const APP_NAME = "ゆでたまSNS";
+
 const state = {
   token: localStorage.getItem("kensho_session") || "",
   me: null,
@@ -50,6 +52,9 @@ function showAuth(msg=""){
 }
 function showMain(){
   $("#authView").classList.add("hidden"); $("#mainView").classList.remove("hidden");
+  const name = state.me?.display_name || "";
+  if ($("#heroGreeting")) $("#heroGreeting").textContent = name ? `${name}さん、おかえり` : "おかえり";
+  document.title = APP_NAME;
 }
 async function boot(){
   if(!state.token) return showAuth();
@@ -86,6 +91,11 @@ async function loadFeed(){
   $("#feed").innerHTML='<div class="post-card"><div class="post-body">読み込み中…</div></div>';
   try{
     const d=await api("feed");
+    if ($("#postCount")) $("#postCount").textContent = String(d.posts.length);
+    try {
+      const md = await api("members");
+      if ($("#heroMemberCount")) $("#heroMemberCount").textContent = String(md.members.length);
+    } catch {}
     if(!d.posts.length){$("#feed").innerHTML='<div class="post-card"><div class="post-body">まだ投稿がありません。最初の投稿をしてみよう！</div></div>';return}
     $("#feed").innerHTML=d.posts.map(p=>`
       <article class="post-card" data-id="${p.id}">
@@ -136,6 +146,7 @@ $("#submitPost").onclick=async()=>{
 
 async function loadMembers(){
   const d=await api("members"); $("#memberCount").textContent=`${d.members.length}人`;
+  if ($("#heroMemberCount")) $("#heroMemberCount").textContent = String(d.members.length);
   $("#membersList").innerHTML=d.members.map(m=>`<div class="member-row">${avatarHTML(m)}<div><strong>${esc(m.display_name)}</strong>${m.bio?`<div class="member-bio">${esc(m.bio)}</div>`:""}</div></div>`).join("");
 }
 async function loadProfile(){
