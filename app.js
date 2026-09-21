@@ -77,14 +77,36 @@ function isStandaloneWebApp(){return window.matchMedia?.("(display-mode: standal
 function urlBase64ToUint8Array(s){const p="=".repeat((4-s.length%4)%4),b=(s+p).replace(/-/g,"+").replace(/_/g,"/");return Uint8Array.from([...atob(b)].map(c=>c.charCodeAt(0)))}
 async function getPushRegistration(){if(!("serviceWorker" in navigator))return null;try{await navigator.serviceWorker.register("./sw.js?v=38");return await navigator.serviceWorker.ready}catch(e){console.warn("service worker registration failed",e);return null}}
 async function updatePushButton(){
+  const btn=$("#talkNotificationSetting");
   const status=$("#talkNotificationStatus");
-  if(!status)return;
-  if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){status.textContent="この端末は非対応";return}
-  if(!isStandaloneWebApp()){status.textContent="ホーム画面版で設定";return}
-  if(Notification.permission==="denied"){status.textContent="許可されていません";return}
+  if(!btn||!status)return;
+
+  btn.classList.remove("on","off","blocked","unsupported");
+
+  if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){
+    status.textContent="この端末は非対応";
+    btn.classList.add("unsupported");
+    btn.setAttribute("aria-label","端末通知：非対応");
+    return;
+  }
+  if(!isStandaloneWebApp()){
+    status.textContent="ホーム画面版で設定";
+    btn.classList.add("off");
+    btn.setAttribute("aria-label","端末通知：ホーム画面版で設定");
+    return;
+  }
+  if(Notification.permission==="denied"){
+    status.textContent="許可されていません";
+    btn.classList.add("blocked");
+    btn.setAttribute("aria-label","端末通知：許可されていません");
+    return;
+  }
+
   const reg=await getPushRegistration();
   const sub=reg?await reg.pushManager.getSubscription():null;
   status.textContent=sub?"オン":"オフ";
+  btn.classList.add(sub?"on":"off");
+  btn.setAttribute("aria-label",sub?"端末通知：オン":"端末通知：オフ");
 }
 async function enablePushNotifications(){if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){alert("この端末ではWeb通知を利用できません。");return}if(!isStandaloneWebApp()){alert("iPhoneではSafariの共有メニューから『ホーム画面に追加』したゆでたまSNSを開いて、もう一度設定してください。");return}if(Notification.permission==="denied"){alert("通知が拒否されています。iPhoneの『設定 → 通知 → ゆでたまSNS』から許可してください。");return}const reg=await getPushRegistration();if(!reg)throw new Error("通知の準備に失敗しました");let sub=await reg.pushManager.getSubscription();if(sub){await api("remove_push_subscription",{endpoint:sub.endpoint});await sub.unsubscribe();await updatePushButton();return}const permission=await Notification.requestPermission();if(permission!=="granted"){await updatePushButton();return}const key=await api("push_public_key");sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.public_key)});await api("save_push_subscription",{subscription:sub.toJSON(),user_agent:navigator.userAgent});await updatePushButton()}
 async function upload(file, kind) {

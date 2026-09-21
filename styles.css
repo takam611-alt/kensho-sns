@@ -2446,3 +2446,43 @@ body[data-active-page="homePage"] #mainView{
   height:auto!important;
   min-height:100vh!important;
 }
+
+/* --- v41 compact Talk notification bell --- */
+.talk-section-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+}
+.talk-head-right{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.talk-notification-setting{
+  display:none!important;
+}
+.talk-notification-bell{
+  width:30px;
+  height:30px;
+  min-width:30px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:transparent;
+  font-size:16px;
+  line-height:1;
+  color:var(--text);
+  opacity:.72;
+}
+.talk-notification-bell:active{
+  background:var(--soft);
+}
+.talk-notification-bell.on{
+  opacity:1;
+}
+.talk-notification-bell.blocked,
+.talk-notification-bell.unsupported{
+  opacity:.38;
+}

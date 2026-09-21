@@ -9,15 +9,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="ゆでたまSNS">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=40">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=40">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=40">
-  <link rel="manifest" href="site.webmanifest?v=40">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=41">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=41">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=41">
+  <link rel="manifest" href="site.webmanifest?v=41">
   <style>
     .hidden{display:none!important}
     #loadingView{position:fixed;inset:0;z-index:9999;background:#fff}
   </style>
-  <link rel="stylesheet" href="styles.css?v=40">
+  <link rel="stylesheet" href="styles.css?v=41">
 </head>
 <body>
   <div id="appShell">
@@ -107,18 +107,16 @@
 
         <section id="talkPage" class="page hidden">
           <div id="talkListView">
-            <div class="section-head section-card glass compact-sheet">
+            <div class="section-head section-card glass compact-sheet talk-section-head">
               <h3>Talk</h3>
-              <span id="talkUnread"></span>
+              <div class="talk-head-right">
+                <span id="talkUnread"></span>
+                <button id="talkNotificationSetting" class="talk-notification-bell" type="button" aria-label="端末通知" title="端末通知">
+                  🔔
+                  <span id="talkNotificationStatus" class="sr-only">設定を確認</span>
+                </button>
+              </div>
             </div>
-            <button id="talkNotificationSetting" class="talk-notification-setting" type="button">
-              <span class="talk-notification-icon">🔔</span>
-              <span class="talk-notification-copy">
-                <strong>端末通知</strong>
-                <small id="talkNotificationStatus">設定を確認</small>
-              </span>
-              <span class="talk-notification-chevron">›</span>
-            </button>
             <div id="talkList" class="talk-list"></div>
             <div class="talk-start-wrap">
               <button id="newTalkBtn" class="ghost talk-start-btn">＋ 新しいトーク</button>
@@ -294,6 +292,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=40"></script>
+  <script src="app.js?v=41"></script>
 </body>
 </html>
