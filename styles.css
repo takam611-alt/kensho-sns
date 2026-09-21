@@ -1495,3 +1495,115 @@ main{
 .message-context-card .context-actions{
   display:block;
 }
+
+/* --- v24: secret-talk matching refinements --- */
+
+/* Suppress iPhone native callout / text-selection popup on chat messages */
+#talkThreadView,
+#talkMessages,
+.talk-bubble-wrap,
+.message-stack,
+.talk-bubble,
+.message-text,
+.message-meta,
+.reply-preview{
+  -webkit-touch-callout:none!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
+.talk-bubble,
+.message-text{
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* Keep the entire chat fixed while left-swiping to reply */
+html, body{
+  overflow-x:hidden!important;
+}
+#talkThreadView,
+.talk-messages{
+  overflow-x:hidden!important;
+  touch-action:pan-y;
+}
+.talk-bubble-wrap,
+.talk-bubble-wrap.swiping-reply{
+  transform:none!important;
+  transition:none!important;
+}
+.talk-bubble-wrap::after{
+  right:6px!important;
+  opacity:0;
+  transform:translateY(-50%) scale(.82)!important;
+  z-index:3;
+  background:var(--soft);
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+.talk-bubble-wrap.swiping-reply::after{
+  opacity:.72;
+}
+.talk-bubble-wrap.reply-ready::after{
+  opacity:1;
+  transform:translateY(-50%) scale(1)!important;
+  color:var(--accent);
+}
+
+/* Slightly larger message type */
+.talk-bubble{
+  font-size:15px!important;
+  line-height:1.5!important;
+  padding:9px 12px!important;
+}
+.message-text{
+  font-size:15px!important;
+}
+
+/* Long-press card: compact reaction row + two horizontal actions */
+.message-context-card .reaction-picker{
+  grid-template-columns:repeat(6,1fr)!important;
+  gap:2px!important;
+  padding:8px 7px!important;
+}
+.message-context-card .reaction-picker button{
+  width:39px!important;
+  height:39px!important;
+  font-size:21px!important;
+  background:transparent!important;
+}
+.context-quick-actions{
+  display:grid;
+  grid-template-columns:1fr 64px;
+  gap:0;
+  border-top:1px solid var(--line);
+}
+.quick-action-btn{
+  min-height:48px;
+  border:0;
+  border-right:1px solid var(--line);
+  background:var(--card);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  font-size:12px;
+  font-weight:700;
+}
+.quick-action-btn:last-child{
+  border-right:0;
+}
+.quick-action-btn:active{
+  background:var(--soft);
+}
+.quick-action-icon{
+  font-size:15px;
+}
+.quick-action-btn.pin-only{
+  font-size:19px;
+  padding:0;
+}
+
+/* No delete/cancel rows */
+.context-actions,
+.context-row{
+  display:none!important;
+}

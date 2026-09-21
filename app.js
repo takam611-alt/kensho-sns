@@ -400,7 +400,6 @@ function bindMessagePressActions(el, id){
   let currentX = 0;
   let currentY = 0;
   let swiping = false;
-  let repliedBySwipe = false;
 
   const wrap = el.closest(".talk-bubble-wrap");
 
@@ -414,7 +413,6 @@ function bindMessagePressActions(el, id){
   const resetSwipe = ()=>{
     if(wrap){
       wrap.classList.remove("swiping-reply","reply-ready");
-      wrap.style.removeProperty("--reply-shift");
     }
     swiping = false;
   };
@@ -423,7 +421,6 @@ function bindMessagePressActions(el, id){
     clearPress();
     longPressed = false;
     swiping = false;
-    repliedBySwipe = false;
     startX = currentX = x;
     startY = currentY = y;
     pressTimer = setTimeout(()=>{
@@ -442,14 +439,12 @@ function bindMessagePressActions(el, id){
 
     if(Math.abs(dx) > 8 || Math.abs(dy) > 8) clearPress();
 
-    // Swipe LEFT to quote-reply.
+    // Swipe LEFT to quote-reply, but keep the chat UI fixed in place.
     if(dx < -10 && Math.abs(dx) > Math.abs(dy) * 1.15){
       swiping = true;
-      const shift = Math.max(-72, dx * .72);
       if(wrap){
         wrap.classList.add("swiping-reply");
-        wrap.style.setProperty("--reply-shift",`${shift}px`);
-        wrap.classList.toggle("reply-ready", Math.abs(shift) >= 48);
+        wrap.classList.toggle("reply-ready", Math.abs(dx) >= 58);
       }
     }
   };
@@ -462,7 +457,6 @@ function bindMessagePressActions(el, id){
       if(dx <= -58){
         const msg = state.talkMessages.find(x=>x.id===id);
         if(msg && !msg.deleted_for_all){
-          repliedBySwipe = true;
           if(navigator.vibrate) navigator.vibrate(8);
           setReply(msg);
         }
@@ -471,7 +465,7 @@ function bindMessagePressActions(el, id){
       return;
     }
 
-    if(longPressed || repliedBySwipe) return;
+    if(longPressed) return;
 
     const now = Date.now();
     if(now - lastTap < 300){
@@ -508,7 +502,6 @@ function openMessageActions(id){
   const m=state.talkMessages.find(x=>x.id===id);
   if(!m || m.deleted_for_all) return;
   state.talkSelectedMessage=m;
-  $("#actionDeleteAll").classList.toggle("hidden", m.sender_id!==state.me?.id);
 
   const mine=m.sender_id===state.me?.id;
   const preview=$("#messageActionPreview");
@@ -559,9 +552,6 @@ async function copyMessageText(text){
 }
 $("#actionCopy").onclick=async()=>{const m=state.talkSelectedMessage;if(m)await copyMessageText(messageBodyText(m));$("#messageActionsDialog").close()};
 $("#actionPin").onclick=async()=>{const m=state.talkSelectedMessage;if(m)await api("pin_message",{peer_id:state.talkPeer,message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
-$("#actionDeleteSelf").onclick=async()=>{const m=state.talkSelectedMessage;if(m&&confirm("このメッセージを自分の画面から削除しますか？"))await api("delete_message_self",{message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
-$("#actionDeleteAll").onclick=async()=>{const m=state.talkSelectedMessage;if(m&&confirm("このメッセージを送信取消しますか？"))await api("delete_message_all",{message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
-$("#closeMessageActions").onclick=()=>$("#messageActionsDialog").close();
 $("#messageActionsDialog").addEventListener("click",e=>{
   if(e.target===$("#messageActionsDialog")) $("#messageActionsDialog").close();
 });

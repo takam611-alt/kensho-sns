@@ -225,8 +225,8 @@
   <dialog id="messageActionsDialog" class="message-context-dialog">
     <div class="message-context-card">
       <div class="reaction-picker" aria-label="リアクション">
-        <button type="button" data-reaction="❤️">❤️</button>
         <button type="button" data-reaction="👍">👍</button>
+        <button type="button" data-reaction="❤️">❤️</button>
         <button type="button" data-reaction="😂">😂</button>
         <button type="button" data-reaction="😮">😮</button>
         <button type="button" data-reaction="😢">😢</button>
@@ -235,12 +235,12 @@
 
       <div id="messageActionPreview" class="message-action-preview"></div>
 
-      <div class="context-actions">
-        <button id="actionCopy" class="context-row" type="button"><span class="context-icon">▣</span><span>コピー</span></button>
-        <button id="actionPin" class="context-row" type="button"><span class="context-icon">📌</span><span>ピン留め</span></button>
-        <button id="actionDeleteSelf" class="context-row danger-row" type="button"><span class="context-icon">🗑</span><span>自分の画面から削除</span></button>
-        <button id="actionDeleteAll" class="context-row danger-row hidden" type="button"><span class="context-icon">🗑</span><span>送信取消</span></button>
-        <button id="closeMessageActions" class="context-row cancel-row" type="button"><span class="context-icon">✕</span><span>キャンセル</span></button>
+      <div class="context-quick-actions">
+        <button id="actionCopy" class="quick-action-btn" type="button">
+          <span class="quick-action-icon">▣</span>
+          <span>コピー</span>
+        </button>
+        <button id="actionPin" class="quick-action-btn pin-only" type="button" aria-label="ピン留め" title="ピン留め">📌</button>
       </div>
     </div>
   </dialog>
