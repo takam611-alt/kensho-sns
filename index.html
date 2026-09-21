@@ -95,6 +95,32 @@
           <div id="feed" class="feed"></div>
         </section>
 
+
+        <section id="talkPage" class="page hidden">
+          <div id="talkListView">
+            <div class="section-head section-card glass compact-sheet">
+              <h3>Talk</h3>
+              <span id="talkUnread"></span>
+            </div>
+            <div id="talkList" class="talk-list"></div>
+            <div class="talk-start-wrap">
+              <button id="newTalkBtn" class="ghost talk-start-btn">＋ 新しいトーク</button>
+            </div>
+          </div>
+
+          <div id="talkThreadView" class="hidden">
+            <div class="talk-thread-head">
+              <button id="backTalkList" class="icon-btn" type="button">‹</button>
+              <div id="talkPeer" class="talk-peer"></div>
+            </div>
+            <div id="talkMessages" class="talk-messages"></div>
+            <form id="talkForm" class="talk-form">
+              <input id="talkInput" maxlength="2000" placeholder="メッセージ">
+              <button class="primary mini" type="submit">送信</button>
+            </form>
+          </div>
+        </section>
+
         <section id="membersPage" class="page hidden">
           <div class="section-head section-card glass compact-sheet">
             <h3>メンバー</h3>
@@ -152,12 +178,25 @@
 
       <nav class="bottom-nav glass">
         <button data-page="homePage" class="nav-item active"><span>🏠</span><small>ホーム</small></button>
+        <button data-page="talkPage" class="nav-item"><span>💬</span><small>Talk</small><b id="talkBadge" class="nav-badge hidden">0</b></button>
         <button data-page="membersPage" class="nav-item"><span>👥</span><small>メンバー</small></button>
         <button data-page="profilePage" class="nav-item"><span>🥹</span><small>Profile</small></button>
       </nav>
     </section>
   </div>
 
+
+
+  <dialog id="memberPickerDialog" class="member-picker-dialog">
+    <div class="member-picker-sheet">
+      <div class="compose-head">
+        <button id="closeMemberPicker" class="compose-close" type="button">✕</button>
+        <strong>トークする相手</strong>
+        <span></span>
+      </div>
+      <div id="memberPickerList" class="members"></div>
+    </div>
+  </dialog>
 
   <dialog id="composeDialog" class="compose-dialog">
     <div class="compose-sheet">

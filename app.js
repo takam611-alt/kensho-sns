@@ -41,6 +41,8 @@ const state = {
   postType: "normal",
   postImagePath: null,
   currentPostId: null,
+  talkPeer: null,
+  talkTimer: null,
 };
 
 async function call(url, payload) {
@@ -102,6 +104,7 @@ async function boot(){
     const d=await call(AUTH_URL,{action:"me",token:state.token});
     state.me=d.member;
     await loadFeed();
+    loadTalkList().catch(()=>{});
   }catch(e){
     localStorage.removeItem("kensho_session");
     state.token="";
@@ -143,6 +146,8 @@ async function loadFeed(){
       <article class="post-card" data-id="${p.id}">
         <div class="post-head">${avatarHTML(p.members)}
           <div class="post-meta"><div class="post-name">${esc(p.members?.display_name||"")}</div><div class="post-time">${when(p.created_at)}</div></div>
+          ${p.can_delete?`<button class="post-menu-btn" data-id="${p.id}" aria-label="投稿メニュー">•••</button>
+          <div class="post-menu hidden" data-menu="${p.id}"><button class="delete-post-btn" data-id="${p.id}">投稿を削除</button></div>`:""}
         </div>
         <div class="post-body">${esc(p.body||"")}</div>
         ${p.image_url?`<img class="post-image" src="${esc(p.image_url)}" alt="">`:""}
@@ -153,12 +158,27 @@ async function loadFeed(){
       </article>`).join("");
     $$(".like-btn").forEach(b=>b.onclick=()=>toggleLike(b));
     $$(".comment-btn").forEach(b=>b.onclick=()=>openComments(b.dataset.id));
+    $$(".post-menu-btn").forEach(b=>b.onclick=(e)=>{
+      e.stopPropagation();
+      const m=document.querySelector(`[data-menu="${b.dataset.id}"]`);
+      $$(".post-menu").forEach(x=>{if(x!==m)x.classList.add("hidden")});
+      m?.classList.toggle("hidden");
+    });
+    $$(".delete-post-btn").forEach(b=>b.onclick=()=>deletePost(b.dataset.id));
     setShellLoading(false);
   }catch(e){
     $("#feed").innerHTML=`<div class="post-card"><div class="post-body">${esc(e.message)}</div></div>`;
     setShellLoading(false);
   }
 }
+async function deletePost(id){
+  if(!confirm("この投稿を削除しますか？")) return;
+  try{
+    await api("delete_post",{post_id:id});
+    document.querySelector(`.post-card[data-id="${id}"]`)?.remove();
+  }catch(e){ alert(e.message); }
+}
+
 async function toggleLike(btn){
   if(btn.disabled) return;
   btn.disabled = true;
@@ -215,6 +235,104 @@ $("#commentForm").onsubmit=async e=>{
   }
 }
 
+
+
+function talkTime(iso){
+  const d=new Date(iso);
+  const now=new Date();
+  return d.toDateString()===now.toDateString()
+    ? d.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})
+    : d.toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"});
+}
+function updateTalkBadge(n){
+  const badge=$("#talkBadge");
+  if(!badge)return;
+  badge.textContent=String(Math.min(n,99));
+  badge.classList.toggle("hidden", !n);
+}
+async function loadTalkList(){
+  const box=$("#talkList");
+  box.innerHTML='<div class="post-card"><div class="post-body">読み込み中…</div></div>';
+  try{
+    const d=await api("talk_list");
+    updateTalkBadge(d.unread_total||0);
+    $("#talkUnread").textContent=d.unread_total?`未読 ${d.unread_total}`:"";
+    box.innerHTML=d.conversations.length?d.conversations.map(c=>`
+      <button class="talk-row" data-peer="${c.peer.id}">
+        ${avatarHTML(c.peer)}
+        <div class="talk-row-main">
+          <div class="talk-row-name">${esc(c.peer.display_name)}</div>
+          <div class="talk-row-preview">${esc(c.last_message.body||"")}</div>
+        </div>
+        <div class="talk-row-meta">
+          <span class="talk-row-time">${talkTime(c.last_message.created_at)}</span>
+          ${c.unread_count?`<span class="talk-unread">${c.unread_count}</span>`:""}
+        </div>
+      </button>`).join(""):'<div class="post-card"><div class="post-body">まだトークはありません。</div></div>';
+    $$(".talk-row").forEach(b=>b.onclick=()=>openTalk(b.dataset.peer));
+  }catch(e){
+    box.innerHTML=`<div class="post-card"><div class="post-body">${esc(e.message)}</div></div>`;
+  }
+}
+async function openTalk(peerId){
+  clearInterval(state.talkTimer);
+  state.talkPeer=peerId;
+  $("#talkListView").classList.add("hidden");
+  $("#talkThreadView").classList.remove("hidden");
+  await loadTalkMessages(true);
+  state.talkTimer=setInterval(()=>loadTalkMessages(false),3000);
+}
+async function loadTalkMessages(scroll=true){
+  if(!state.talkPeer)return;
+  try{
+    const d=await api("talk_messages",{peer_id:state.talkPeer});
+    $("#talkPeer").innerHTML=`${avatarHTML(d.peer)}<span>${esc(d.peer.display_name)}</span>`;
+    $("#talkMessages").innerHTML=d.messages.length?d.messages.map(m=>`
+      <div class="talk-bubble-wrap ${m.sender_id===state.me?.id?"me":""}">
+        <div class="talk-bubble">${esc(m.body)}<span class="talk-time">${talkTime(m.created_at)}</span></div>
+      </div>`).join(""):'<div class="comments-empty">まだメッセージはありません。</div>';
+    if(scroll) window.scrollTo(0,document.body.scrollHeight);
+    const list=await api("talk_list");
+    updateTalkBadge(list.unread_total||0);
+  }catch(e){}
+}
+$("#talkForm").onsubmit=async e=>{
+  e.preventDefault();
+  const input=$("#talkInput");
+  const text=input.value.trim();
+  if(!text||!state.talkPeer)return;
+  const btn=e.currentTarget.querySelector("button");
+  btn.disabled=true;
+  try{
+    await api("send_message",{peer_id:state.talkPeer,body:text});
+    input.value="";
+    await loadTalkMessages(true);
+  }catch(err){alert(err.message)}
+  finally{btn.disabled=false}
+};
+$("#backTalkList").onclick=async()=>{
+  clearInterval(state.talkTimer);
+  state.talkTimer=null;
+  state.talkPeer=null;
+  $("#talkThreadView").classList.add("hidden");
+  $("#talkListView").classList.remove("hidden");
+  await loadTalkList();
+};
+$("#newTalkBtn").onclick=async()=>{
+  const d=await api("members");
+  const people=d.members.filter(m=>m.id!==state.me?.id);
+  $("#memberPickerList").innerHTML=people.map(m=>`
+    <button class="member-pick-row" data-peer="${m.id}">
+      ${avatarHTML(m)}
+      <div><strong>${esc(m.display_name)}</strong>${m.bio?`<div class="talk-row-preview">${esc(m.bio)}</div>`:""}</div>
+    </button>`).join("");
+  $$(".member-pick-row").forEach(b=>b.onclick=()=>{
+    $("#memberPickerDialog").close();
+    openTalk(b.dataset.peer);
+  });
+  $("#memberPickerDialog").showModal();
+};
+$("#closeMemberPicker").onclick=()=>$("#memberPickerDialog").close();
 
 $("#composeFab").onclick=()=>{
   $("#postMsg").textContent="";
@@ -274,9 +392,20 @@ $("#logoutBtn").onclick=async()=>{
 $("#refreshBtn").onclick=()=>loadFeed();
 
 async function go(id){
-  window.scrollTo({top:0,left:0,behavior:"instant"});
+  if(id!=="talkPage"){
+    clearInterval(state.talkTimer);
+    state.talkTimer=null;
+  }
   $$(".page").forEach(p=>p.classList.add("hidden"));$("#"+id).classList.remove("hidden");
   $$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
+  $("#composeFab").classList.toggle("hidden", id !== "homePage");
+  window.scrollTo({top:0,left:0,behavior:"auto"});
+  if(id==="talkPage"){
+    $("#talkThreadView").classList.add("hidden");
+    $("#talkListView").classList.remove("hidden");
+    state.talkPeer=null;
+    await loadTalkList();
+  }
   if(id==="membersPage")await loadMembers();
   if(id==="profilePage")await loadProfile();
 }

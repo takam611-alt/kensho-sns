@@ -487,3 +487,181 @@ body[data-theme="blue"] .dialog-head,
 body[data-theme="blue"] .comment-form{
   background:var(--card);
 }
+
+/* --- v15 Talk + post deletion --- */
+.bottom-nav{grid-template-columns:repeat(4,1fr)}
+.nav-item{position:relative}
+.nav-badge{
+  position:absolute;
+  top:3px;
+  left:calc(50% + 8px);
+  min-width:16px;
+  height:16px;
+  padding:0 4px;
+  border-radius:999px;
+  background:#f4212e;
+  color:#fff;
+  font-size:9px;
+  line-height:16px;
+  text-align:center;
+  font-style:normal;
+}
+
+.post-head{position:relative}
+.post-menu-btn{
+  margin-left:auto;
+  width:32px;
+  height:32px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  border-radius:50%;
+  font-size:18px;
+  display:grid;
+  place-items:center;
+}
+.post-menu-btn:active{background:var(--soft)}
+.post-menu{
+  position:absolute;
+  right:10px;
+  top:42px;
+  z-index:8;
+  min-width:120px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  box-shadow:0 8px 30px rgba(0,0,0,.12);
+  overflow:hidden;
+}
+.post-menu button{
+  width:100%;
+  border:0;
+  background:transparent;
+  color:var(--danger);
+  text-align:left;
+  padding:11px 13px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.talk-list{border-top:1px solid var(--line)}
+.talk-row{
+  width:100%;
+  border:0;
+  border-bottom:1px solid var(--line);
+  background:var(--card);
+  color:var(--text);
+  padding:11px 12px;
+  display:grid;
+  grid-template-columns:42px 1fr auto;
+  gap:10px;
+  align-items:center;
+  text-align:left;
+}
+.talk-row-main{min-width:0}
+.talk-row-name{font-size:13px;font-weight:700}
+.talk-row-preview{
+  font-size:11px;
+  color:var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-top:2px;
+}
+.talk-row-meta{display:grid;justify-items:end;gap:5px}
+.talk-row-time{font-size:9px;color:var(--muted)}
+.talk-unread{
+  min-width:18px;height:18px;border-radius:999px;padding:0 5px;
+  background:var(--accent);color:#fff;font-size:9px;display:grid;place-items:center
+}
+.talk-start-wrap{padding:12px}
+.talk-start-btn{width:100%;height:38px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--text)}
+
+.talk-thread-head{
+  position:sticky;
+  top:48px;
+  z-index:5;
+  height:48px;
+  display:grid;
+  grid-template-columns:42px 1fr;
+  align-items:center;
+  border-bottom:1px solid var(--line);
+  background:var(--card);
+  padding:0 8px;
+}
+.talk-peer{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.talk-peer .avatar{width:30px;height:30px}
+.talk-messages{
+  min-height:calc(100svh - 48px - 48px - 58px - 54px);
+  padding:12px 10px 76px;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  background:var(--bg);
+}
+.talk-bubble-wrap{display:flex}
+.talk-bubble-wrap.me{justify-content:flex-end}
+.talk-bubble{
+  max-width:78%;
+  padding:8px 10px;
+  border-radius:16px;
+  background:var(--soft);
+  color:var(--text);
+  font-size:13px;
+  line-height:1.45;
+  word-break:break-word;
+}
+.talk-bubble-wrap.me .talk-bubble{
+  background:var(--accent);
+  color:#fff;
+}
+.talk-time{display:block;font-size:8px;opacity:.65;margin-top:3px;text-align:right}
+.talk-form{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:calc(54px + env(safe-area-inset-bottom));
+  width:min(100%,760px);
+  z-index:9;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:7px;
+  padding:8px 10px;
+  border-top:1px solid var(--line);
+  background:var(--card);
+}
+.talk-form input{
+  min-width:0;height:36px;border:1px solid var(--line-strong);border-radius:999px;
+  padding:0 13px;background:var(--card);color:var(--text);font-size:13px
+}
+
+.member-picker-dialog{
+  width:min(100%,520px);
+  max-height:72svh;
+  margin:auto auto 0;
+  padding:0;
+  border:0;
+  border-radius:20px 20px 0 0;
+  background:transparent;
+}
+.member-picker-dialog::backdrop{background:rgba(0,0,0,.34)}
+.member-picker-sheet{
+  max-height:72svh;
+  overflow:auto;
+  background:var(--card);
+  color:var(--text);
+  border-radius:20px 20px 0 0;
+  border:1px solid var(--line);
+}
+.member-pick-row{
+  width:100%;
+  border:0;
+  border-bottom:1px solid var(--line);
+  background:var(--card);
+  color:var(--text);
+  padding:11px 12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-align:left;
+}
