@@ -1876,3 +1876,55 @@ body[data-theme="blue"] .talk-bubble-wrap:not(.me) .talk-bubble{
   font-size:15px!important;
   line-height:1.5!important;
 }
+
+/* --- v29 interaction + composer placement --- */
+
+/* Double tap opens actions; no long-press UI at all */
+#talkMessages,
+#talkMessages *{
+  -webkit-touch-callout:none!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
+
+/* own message time/read live on LEFT side of the blue bubble */
+.bubble-row.me{
+  flex-direction:row!important;
+  justify-content:flex-end!important;
+}
+.bubble-row.me .message-side-meta{
+  order:0;
+  align-items:flex-end!important;
+}
+.bubble-row.me .talk-bubble{
+  order:1;
+}
+.bubble-row:not(.me) .talk-bubble{
+  order:0;
+}
+.bubble-row:not(.me) .message-side-meta{
+  order:1;
+}
+
+/* Put composer lower, directly above the persistent floating tabs */
+#talkThreadView:not(.hidden){
+  bottom:calc(70px + env(safe-area-inset-bottom))!important;
+}
+.talk-form{
+  margin:0!important;
+  padding:6px 8px calc(4px + env(safe-area-inset-bottom))!important;
+  min-height:50px;
+  background:var(--card);
+  border-top:1px solid var(--line);
+}
+.reply-bar{
+  padding:5px 9px!important;
+}
+.typing-indicator{
+  padding-bottom:2px!important;
+}
+
+/* reduce dead space between composer and floating nav */
+body.talk-thread-open .bottom-nav{
+  bottom:calc(1px + env(safe-area-inset-bottom))!important;
+}

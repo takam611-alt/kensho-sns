@@ -341,13 +341,11 @@ function renderTalkMessages(messages){
       <div class="message-stack">
         ${reply}
         <div class="bubble-row ${mine?"me":""}">
+          ${mine?`<div class="message-side-meta me">${readLabel}<span class="talk-time-side">${timeOnly}</span></div>`:""}
           <div class="talk-bubble ${deleted?"deleted":""}" data-action-message="${m.id}">
             <span class="message-text">${deleted?"メッセージを削除しました":esc(m.body)}</span>
           </div>
-          <div class="message-side-meta ${mine?"me":""}">
-            ${readLabel}
-            <span class="talk-time-side">${timeOnly}</span>
-          </div>
+          ${!mine?`<div class="message-side-meta">${readLabel}<span class="talk-time-side">${timeOnly}</span></div>`:""}
         </div>
         ${!deleted?`<div class="message-meta ${mine?"me":""}">
           <div class="reaction-summary">${(m.reaction_summary||[]).map(r=>`<button class="reaction-chip ${m.my_reaction===r.emoji?"mine":""}" data-react-chip="${m.id}" data-emoji="${r.emoji}">${r.emoji}${r.count>1?` ${r.count}`:""}</button>`).join("")}</div>
@@ -402,8 +400,6 @@ async function toggleMessageLike(id){
 
 
 function bindMessagePressActions(el, id){
-  let pressTimer = null;
-  let longPressed = false;
   let lastTap = 0;
   let startX = 0;
   let startY = 0;
@@ -413,13 +409,6 @@ function bindMessagePressActions(el, id){
 
   const wrap = el.closest(".talk-bubble-wrap");
 
-  const clearPress = ()=>{
-    if(pressTimer){
-      clearTimeout(pressTimer);
-      pressTimer = null;
-    }
-  };
-
   const resetSwipe = ()=>{
     if(wrap){
       wrap.classList.remove("swiping-reply","reply-ready");
@@ -427,29 +416,19 @@ function bindMessagePressActions(el, id){
     swiping = false;
   };
 
-  const startPress = (x, y)=>{
-    clearPress();
-    longPressed = false;
-    swiping = false;
+  const startGesture = (x, y)=>{
     startX = currentX = x;
     startY = currentY = y;
-    pressTimer = setTimeout(()=>{
-      if(swiping) return;
-      longPressed = true;
-      openMessageActions(id);
-      if(navigator.vibrate) navigator.vibrate(10);
-    }, 380);
+    swiping = false;
   };
 
-  const movePress = (x, y)=>{
+  const moveGesture = (x, y)=>{
     currentX = x;
     currentY = y;
     const dx = x - startX;
     const dy = y - startY;
 
-    if(Math.abs(dx) > 8 || Math.abs(dy) > 8) clearPress();
-
-    // Swipe LEFT to quote-reply, but keep the chat UI fixed in place.
+    // Swipe LEFT to quote-reply. Keep chat itself fixed.
     if(dx < -10 && Math.abs(dx) > Math.abs(dy) * 1.15){
       swiping = true;
       if(wrap){
@@ -459,9 +438,7 @@ function bindMessagePressActions(el, id){
     }
   };
 
-  const endPress = ()=>{
-    clearPress();
-
+  const endGesture = ()=>{
     if(swiping){
       const dx = currentX - startX;
       if(dx <= -58){
@@ -475,12 +452,11 @@ function bindMessagePressActions(el, id){
       return;
     }
 
-    if(longPressed) return;
-
     const now = Date.now();
     if(now - lastTap < 300){
       lastTap = 0;
-      toggleMessageLike(id);
+      openMessageActions(id);
+      if(navigator.vibrate) navigator.vibrate(8);
     }else{
       lastTap = now;
     }
@@ -489,24 +465,24 @@ function bindMessagePressActions(el, id){
   el.ontouchstart = e=>{
     if(e.touches.length !== 1) return;
     const t = e.touches[0];
-    startPress(t.clientX, t.clientY);
+    startGesture(t.clientX, t.clientY);
   };
   el.ontouchmove = e=>{
     if(!e.touches.length) return;
     const t = e.touches[0];
-    movePress(t.clientX, t.clientY);
+    moveGesture(t.clientX, t.clientY);
     if(swiping) e.preventDefault();
   };
-  el.ontouchend = ()=>endPress();
-  el.ontouchcancel = ()=>{ clearPress(); resetSwipe(); };
+  el.ontouchend = ()=>endGesture();
+  el.ontouchcancel = ()=>resetSwipe();
 
   el.onmousedown = e=>{
     if(e.button !== 0) return;
-    startPress(e.clientX, e.clientY);
+    startGesture(e.clientX, e.clientY);
   };
-  el.onmousemove = e=>movePress(e.clientX, e.clientY);
-  el.onmouseup = ()=>endPress();
-  el.onmouseleave = ()=>{ clearPress(); resetSwipe(); };
+  el.onmousemove = e=>moveGesture(e.clientX, e.clientY);
+  el.onmouseup = ()=>endGesture();
+  el.onmouseleave = ()=>resetSwipe();
 }
 function openMessageActions(id){
   const m=state.talkMessages.find(x=>x.id===id);
