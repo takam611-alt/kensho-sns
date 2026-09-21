@@ -9,15 +9,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="ゆでたまSNS">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=38">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=38">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=38">
-  <link rel="manifest" href="site.webmanifest?v=38">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=40">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=40">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=40">
+  <link rel="manifest" href="site.webmanifest?v=40">
   <style>
     .hidden{display:none!important}
     #loadingView{position:fixed;inset:0;z-index:9999;background:#fff}
   </style>
-  <link rel="stylesheet" href="styles.css?v=38">
+  <link rel="stylesheet" href="styles.css?v=40">
 </head>
 <body>
   <div id="appShell">
@@ -111,6 +111,14 @@
               <h3>Talk</h3>
               <span id="talkUnread"></span>
             </div>
+            <button id="talkNotificationSetting" class="talk-notification-setting" type="button">
+              <span class="talk-notification-icon">🔔</span>
+              <span class="talk-notification-copy">
+                <strong>端末通知</strong>
+                <small id="talkNotificationStatus">設定を確認</small>
+              </span>
+              <span class="talk-notification-chevron">›</span>
+            </button>
             <div id="talkList" class="talk-list"></div>
             <div class="talk-start-wrap">
               <button id="newTalkBtn" class="ghost talk-start-btn">＋ 新しいトーク</button>
@@ -217,7 +225,6 @@
         <strong>トーク設定</strong>
         <span></span>
       </div>
-      <button id="enablePushNotifications" class="sheet-row" type="button">端末通知をオン</button>
       <button id="toggleTalkMute" class="sheet-row" type="button">このトークの通知をオフ</button>
       <button id="deleteTalkFromSettings" class="sheet-row danger-row" type="button">トークを削除</button>
     </div>
@@ -287,6 +294,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=38"></script>
+  <script src="app.js?v=40"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@ const SUPABASE_URL = "https://afacytoanuhwedmbfvvf.supabase.co";
 const PUBLISHABLE_KEY = "sb_publishable_NoaaAtRAVYGe5ObQDE5ByQ_Uw1Dq70F";
 const AUTH_URL = `${SUPABASE_URL}/functions/v1/sns-auth`;
 const API_URL = `${SUPABASE_URL}/functions/v1/sns-api`;
+const GROUP_API_URL = `${SUPABASE_URL}/functions/v1/sns-group`;
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -50,6 +51,9 @@ const state = {
   talkMuted: false,
   talkTypingTimer: null,
   talkPeerInfo: null,
+  talkMode: "direct",
+  talkPinnedId: null,
+  groupMessages: [],
 };
 
 async function call(url, payload) {
@@ -65,11 +69,23 @@ async function call(url, payload) {
 async function api(action, extra={}) {
   return call(API_URL, { action, token:state.token, ...extra });
 }
+async function groupApi(action, extra={}) {
+  return call(GROUP_API_URL, { action, token:state.token, ...extra });
+}
 
 function isStandaloneWebApp(){return window.matchMedia?.("(display-mode: standalone)")?.matches||window.navigator.standalone===true}
 function urlBase64ToUint8Array(s){const p="=".repeat((4-s.length%4)%4),b=(s+p).replace(/-/g,"+").replace(/_/g,"/");return Uint8Array.from([...atob(b)].map(c=>c.charCodeAt(0)))}
 async function getPushRegistration(){if(!("serviceWorker" in navigator))return null;try{await navigator.serviceWorker.register("./sw.js?v=38");return await navigator.serviceWorker.ready}catch(e){console.warn("service worker registration failed",e);return null}}
-async function updatePushButton(){const btn=$("#enablePushNotifications");if(!btn)return;if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){btn.textContent="端末通知は非対応";btn.disabled=true;return}if(!isStandaloneWebApp()){btn.textContent="端末通知をオン";btn.disabled=false;return}if(Notification.permission==="denied"){btn.textContent="端末通知：許可されていません";btn.disabled=false;return}const reg=await getPushRegistration();const sub=reg?await reg.pushManager.getSubscription():null;btn.textContent=sub?"端末通知をオフ":"端末通知をオン";btn.disabled=false}
+async function updatePushButton(){
+  const status=$("#talkNotificationStatus");
+  if(!status)return;
+  if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){status.textContent="この端末は非対応";return}
+  if(!isStandaloneWebApp()){status.textContent="ホーム画面版で設定";return}
+  if(Notification.permission==="denied"){status.textContent="許可されていません";return}
+  const reg=await getPushRegistration();
+  const sub=reg?await reg.pushManager.getSubscription():null;
+  status.textContent=sub?"オン":"オフ";
+}
 async function enablePushNotifications(){if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){alert("この端末ではWeb通知を利用できません。");return}if(!isStandaloneWebApp()){alert("iPhoneではSafariの共有メニューから『ホーム画面に追加』したゆでたまSNSを開いて、もう一度設定してください。");return}if(Notification.permission==="denied"){alert("通知が拒否されています。iPhoneの『設定 → 通知 → ゆでたまSNS』から許可してください。");return}const reg=await getPushRegistration();if(!reg)throw new Error("通知の準備に失敗しました");let sub=await reg.pushManager.getSubscription();if(sub){await api("remove_push_subscription",{endpoint:sub.endpoint});await sub.unsubscribe();await updatePushButton();return}const permission=await Notification.requestPermission();if(permission!=="granted"){await updatePushButton();return}const key=await api("push_public_key");sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.public_key)});await api("save_push_subscription",{subscription:sub.toJSON(),user_agent:navigator.userAgent});await updatePushButton()}
 async function upload(file, kind) {
   const fd = new FormData();
@@ -86,24 +102,35 @@ function esc(s=""){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"
 function when(iso){const d=new Date(iso);return d.toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}
 function initials(name=""){return esc(name.slice(0,1).toUpperCase()||"?")}
 const avatarPreloadCache = new Set();
+const avatarLoadedCache = new Set();
+const stableAvatarUrlCache = new Map();
 
+function stableAvatarUrl(m){
+  if(!m?.avatar_url) return "";
+  const key=`${m.id||m.display_name||"?"}|${m.avatar_path||"avatar"}`;
+  if(!stableAvatarUrlCache.has(key)) stableAvatarUrlCache.set(key,m.avatar_url);
+  return stableAvatarUrlCache.get(key);
+}
 function preloadAvatar(url){
   if(!url || avatarPreloadCache.has(url)) return;
   avatarPreloadCache.add(url);
   const img = new Image();
   img.decoding = "async";
+  img.onload=()=>avatarLoadedCache.add(url);
   img.src = url;
 }
 
 function avatarHTML(m,size=""){
   const name = m?.display_name || "?";
   const fallback = initials(name);
-  if(m?.avatar_url){
-    preloadAvatar(m.avatar_url);
+  const url=stableAvatarUrl(m);
+  if(url){
+    const loaded=avatarLoadedCache.has(url);
+    preloadAvatar(url);
     return `<span class="avatar-shell ${size}">
-      <span class="avatar fallback ${size} avatar-placeholder">${fallback}</span>
-      <img class="avatar ${size} avatar-img" src="${esc(m.avatar_url)}" alt="" loading="eager" decoding="async"
-        onload="this.classList.add('loaded');this.previousElementSibling?.classList.add('hidden')"
+      <span class="avatar fallback ${size} avatar-placeholder ${loaded?"hidden":""}">${fallback}</span>
+      <img class="avatar ${size} avatar-img ${loaded?"loaded":""}" src="${esc(url)}" alt="" loading="eager" decoding="async"
+        onload="avatarLoadedCache.add(this.src);this.classList.add('loaded');this.previousElementSibling?.classList.add('hidden')"
         onerror="this.classList.add('hidden')">
     </span>`;
   }
@@ -329,10 +356,33 @@ async function loadTalkList(){
   const box=$("#talkList");
   box.innerHTML='<div class="talk-loading-state">読み込み中…</div>';
   try{
-    const d=await api("talk_list");
+    const [d,g]=await Promise.all([
+      api("talk_list"),
+      groupApi("summary").catch(()=>({last_message:null}))
+    ]);
     updateTalkBadge(d.unread_total||0);
     $("#talkUnread").textContent=d.unread_total?`未読 ${d.unread_total}`:"";
-    box.innerHTML=d.conversations.length?d.conversations.map(c=>`
+    await updatePushButton();
+
+    const groupLast=g.last_message;
+    const groupPreview=groupLast
+      ? `${groupLast.sender?.display_name?groupLast.sender.display_name+"：":""}${groupLast.body||""}`
+      : "全メンバーで話せます";
+    const groupTime=groupLast?`<span class="talk-row-time">${talkTime(groupLast.created_at)}</span>`:"";
+
+    const groupRow=`
+      <div class="talk-row-wrap group-talk-row-wrap">
+        <button class="talk-row group-talk-row" id="openGroupTalk">
+          <div class="group-avatar">👥</div>
+          <div class="talk-row-main">
+            <div class="talk-row-name">全員のトーク</div>
+            <div class="talk-row-preview">${esc(groupPreview)}</div>
+          </div>
+          <div class="talk-row-meta">${groupTime}</div>
+        </button>
+      </div>`;
+
+    const directRows=d.conversations.length?d.conversations.map(c=>`
       <div class="talk-row-wrap" data-peer-wrap="${c.peer.id}">
         <button class="talk-row" data-peer="${c.peer.id}">
           ${avatarHTML(c.peer)}
@@ -346,11 +396,14 @@ async function loadTalkList(){
           </div>
         </button>
         <button class="talk-delete-btn" data-peer="${c.peer.id}" aria-label="トークを削除">•••</button>
-      </div>`).join(""):'<div class="talk-empty">まだトークはありません。</div>';
-    $$(".talk-row").forEach(b=>b.onclick=()=>openTalk(b.dataset.peer));
+      </div>`).join(""):"";
+
+    box.innerHTML=groupRow+directRows;
+    $("#openGroupTalk").onclick=openGroupTalk;
+    $$(".talk-row[data-peer]").forEach(b=>b.onclick=()=>openTalk(b.dataset.peer));
     $$(".talk-delete-btn").forEach(b=>b.onclick=async e=>{
       e.stopPropagation();
-      if(!confirm("このトークを一覧から削除しますか？\n相手側の履歴は削除されません。")) return;
+      if(!confirm("このトークを一覧から削除しますか？\\n相手側の履歴は削除されません。")) return;
       try{
         await api("hide_talk",{peer_id:b.dataset.peer});
         document.querySelector(`[data-peer-wrap="${b.dataset.peer}"]`)?.remove();
@@ -364,7 +417,9 @@ async function loadTalkList(){
 
 async function openTalk(peerId){
   clearInterval(state.talkTimer);
+  state.talkMode="direct";
   state.talkPeer=peerId;
+  $("#talkSettingsBtn").classList.remove("hidden");
   state.talkReplyTo=null;
   $("#replyBar").classList.add("hidden");
   $("#talkListView").classList.add("hidden");
@@ -377,6 +432,57 @@ async function openTalk(peerId){
     await loadTalkMessages(false);
     await pingPresence(false);
   },2500);
+}
+
+
+async function openGroupTalk(){
+  clearInterval(state.talkTimer);
+  state.talkMode="group";
+  state.talkPeer="__group__";
+  state.talkReplyTo=null;
+  state.talkPinnedId=null;
+  $("#replyBar").classList.add("hidden");
+  $("#pinnedMessageBar").classList.add("hidden");
+  $("#talkSearchBar").classList.add("hidden");
+  $("#talkSettingsBtn").classList.add("hidden");
+  $("#talkListView").classList.add("hidden");
+  $("#talkThreadView").classList.remove("hidden");
+  document.body.classList.add("talk-thread-open");
+  $("#talkPeer").innerHTML=`<div class="group-avatar small">👥</div><div><span>全員のトーク</span><small>全メンバー</small></div>`;
+  updateViewportVars();
+  await loadGroupMessages(true);
+  state.talkTimer=setInterval(()=>loadGroupMessages(false),2500);
+}
+
+async function loadGroupMessages(forceScroll=false){
+  const keepBottom=forceScroll||nearTalkBottom();
+  try{
+    const d=await groupApi("list");
+    state.groupMessages=d.messages||[];
+    renderGroupMessages(state.groupMessages);
+    if(keepBottom) requestAnimationFrame(()=>scrollTalkToBottom(false));
+  }catch(e){}
+}
+
+function renderGroupMessages(messages){
+  const q=$("#talkSearchInput")?.value.trim().toLowerCase()||"";
+  const filtered=q?messages.filter(m=>String(m.body||"").toLowerCase().includes(q)):messages;
+  $("#talkMessages").innerHTML=filtered.length?filtered.map(m=>{
+    const mine=m.sender_id===state.me?.id;
+    const time=talkTime(m.created_at);
+    const avatar=!mine?`<div class="talk-side-avatar">${avatarHTML(m.sender,"sm")}</div>`:"";
+    return `<div class="talk-bubble-wrap ${mine?"me":""}" data-message="${m.id}">
+      ${avatar}
+      <div class="message-stack">
+        ${!mine?`<div class="group-sender-name">${esc(m.sender?.display_name||"")}</div>`:""}
+        <div class="bubble-row ${mine?"me":""}">
+          ${mine?`<div class="message-side-meta me"><span class="talk-time-side">${time}</span></div>`:""}
+          <div class="talk-bubble"><span class="message-text">${esc(m.body||"")}</span></div>
+          ${!mine?`<div class="message-side-meta"><span class="talk-time-side">${time}</span></div>`:""}
+        </div>
+      </div>
+    </div>`;
+  }).join(""):'<div class="comments-empty">'+(q?"見つかりませんでした。":"まだメッセージはありません。")+'</div>';
 }
 
 function nearTalkBottom(){
@@ -439,14 +545,22 @@ async function loadTalkMessages(forceScroll=false){
     state.talkMessages=d.messages||[];
     state.talkPeerInfo=d.peer || null;
     state.talkMuted=!!d.muted;
-    $("#talkPeer").innerHTML=`${avatarHTML(d.peer)}<div><span>${esc(d.peer.display_name)}</span><small>${d.online?"オンライン":"オフライン"}</small></div>`;
+    const peerKey=`${d.peer.id}|${d.peer.avatar_path||""}`;
+    if($("#talkPeer").dataset.peerKey!==peerKey){
+      $("#talkPeer").dataset.peerKey=peerKey;
+      $("#talkPeer").innerHTML=`${avatarHTML(d.peer)}<div><span>${esc(d.peer.display_name)}</span><small class="talk-peer-status"></small></div>`;
+    }
+    const peerStatus=$("#talkPeer .talk-peer-status");
+    if(peerStatus) peerStatus.textContent=d.online?"オンライン":"オフライン";
     $("#typingIndicator").classList.toggle("hidden", !d.typing);
     $("#toggleTalkMute").textContent=state.talkMuted?"このトークの通知をオン":"このトークの通知をオフ";
     if(d.pinned){
       $("#pinnedMessageText").textContent=messageBodyText(d.pinned).slice(0,60);
+      state.talkPinnedId=d.pinned.id;
       $("#pinnedMessageBar").dataset.messageId=d.pinned.id;
       $("#pinnedMessageBar").classList.remove("hidden");
     }else{
+      state.talkPinnedId=null;
       $("#pinnedMessageBar").classList.add("hidden");
       $("#pinnedMessageBar").dataset.messageId="";
     }
@@ -604,7 +718,7 @@ async function copyMessageText(text){
   }
 }
 $("#actionCopy").onclick=async()=>{const m=state.talkSelectedMessage;if(m)await copyMessageText(messageBodyText(m));$("#messageActionsDialog").close()};
-$("#actionPin").onclick=async()=>{const m=state.talkSelectedMessage;if(m)await api("pin_message",{peer_id:state.talkPeer,message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
+$("#actionPin").onclick=async()=>{const m=state.talkSelectedMessage;if(m){const removing=state.talkPinnedId===m.id;await api("pin_message",{peer_id:state.talkPeer,message_id:removing?"":m.id});}$("#messageActionsDialog").close();await loadTalkMessages(false)};
 $("#messageActionsDialog").addEventListener("click",e=>{
   if(e.target===$("#messageActionsDialog")) $("#messageActionsDialog").close();
 });
@@ -616,15 +730,31 @@ function jumpToMessage(id){
   el.classList.add("message-highlight");
   setTimeout(()=>el.classList.remove("message-highlight"),900);
 }
-$("#pinnedMessageBar").onclick=()=>jumpToMessage($("#pinnedMessageBar").dataset.messageId);
+$("#pinnedMessageBar").onclick=async()=>{
+  const id=$("#pinnedMessageBar").dataset.messageId;
+  if(!id)return;
+  if(confirm("ピン留めを解除しますか？")){
+    await api("pin_message",{peer_id:state.talkPeer,message_id:""});
+    await loadTalkMessages(false);
+  }else{
+    jumpToMessage(id);
+  }
+};
 
 $("#talkSearchBtn").onclick=()=>{$("#talkSearchBar").classList.remove("hidden");$("#talkSearchInput").focus()};
-$("#closeTalkSearch").onclick=()=>{$("#talkSearchInput").value="";$("#talkSearchBar").classList.add("hidden");renderTalkMessages(state.talkMessages)};
-$("#talkSearchInput").oninput=()=>renderTalkMessages(state.talkMessages);
+$("#closeTalkSearch").onclick=()=>{$("#talkSearchInput").value="";$("#talkSearchBar").classList.add("hidden");state.talkMode==="group"?renderGroupMessages(state.groupMessages):renderTalkMessages(state.talkMessages)};
+$("#talkSearchInput").oninput=()=>state.talkMode==="group"?renderGroupMessages(state.groupMessages):renderTalkMessages(state.talkMessages);
 
-$("#talkSettingsBtn").onclick=async()=>{$("#talkSettingsDialog").showModal();await updatePushButton();};
+$("#talkNotificationSetting").onclick=async()=>{
+  const row=$("#talkNotificationSetting");
+  row.disabled=true;
+  try{await enablePushNotifications()}
+  catch(err){alert(err.message||"通知設定に失敗しました")}
+  finally{row.disabled=false;await updatePushButton()}
+};
+
+$("#talkSettingsBtn").onclick=()=>$("#talkSettingsDialog").showModal();
 $("#closeTalkSettings").onclick=()=>$("#talkSettingsDialog").close();
-$("#enablePushNotifications").onclick=async()=>{const btn=$("#enablePushNotifications");btn.disabled=true;try{await enablePushNotifications()}catch(err){alert(err.message||"通知設定に失敗しました")}finally{await updatePushButton()}};
 $("#toggleTalkMute").onclick=async()=>{
   state.talkMuted=!state.talkMuted;
   await api("set_talk_mute",{peer_id:state.talkPeer,muted:state.talkMuted});
@@ -638,7 +768,7 @@ $("#deleteTalkFromSettings").onclick=async()=>{
 };
 
 async function pingPresence(typing=false){
-  if(!state.talkPeer)return;
+  if(state.talkMode!=="direct"||!state.talkPeer)return;
   try{
     const d=await api("presence",{peer_id:state.talkPeer,typing});
     $("#typingIndicator").classList.toggle("hidden", !d.typing);
@@ -646,6 +776,7 @@ async function pingPresence(typing=false){
 }
 
 $("#talkInput").addEventListener("input",()=>{
+  if(state.talkMode!=="direct")return;
   clearTimeout(state.talkTypingTimer);
   pingPresence(true);
   state.talkTypingTimer=setTimeout(()=>pingPresence(false),2200);
@@ -658,14 +789,20 @@ $("#talkForm").onsubmit=async e=>{
   if(!text||!state.talkPeer)return;
   const btn=e.currentTarget.querySelector("button");
   btn.disabled=true;
-  const replyId=state.talkReplyTo?.id||null;
   try{
-    await api("send_message",{peer_id:state.talkPeer,body:text,reply_to_id:replyId});
-    input.value="";
-    state.talkReplyTo=null;
-    $("#replyBar").classList.add("hidden");
-    await pingPresence(false);
-    await loadTalkMessages(true);
+    if(state.talkMode==="group"){
+      await groupApi("send",{body:text});
+      input.value="";
+      await loadGroupMessages(true);
+    }else{
+      const replyId=state.talkReplyTo?.id||null;
+      await api("send_message",{peer_id:state.talkPeer,body:text,reply_to_id:replyId});
+      input.value="";
+      state.talkReplyTo=null;
+      $("#replyBar").classList.add("hidden");
+      await pingPresence(false);
+      await loadTalkMessages(true);
+    }
     requestAnimationFrame(()=>input.focus({preventScroll:true}));
   }catch(err){alert(err.message)}
   finally{btn.disabled=false}
@@ -675,9 +812,12 @@ async function closeTalkThread(){
   clearInterval(state.talkTimer);
   state.talkTimer=null;
   clearTimeout(state.talkTypingTimer);
-  await pingPresence(false);
+  if(state.talkMode==="direct") await pingPresence(false);
   state.talkPeer=null;
   state.talkReplyTo=null;
+  state.talkMode="direct";
+  state.talkPinnedId=null;
+  $("#talkSettingsBtn").classList.remove("hidden");
   document.body.classList.remove("talk-thread-open");
   $("#talkThreadView").classList.add("hidden");
   $("#talkListView").classList.remove("hidden");

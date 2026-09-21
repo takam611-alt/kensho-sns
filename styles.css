@@ -2360,3 +2360,89 @@ body[data-active-page="talkPage"] main{padding-top:0!important}
 body[data-active-page="talkPage"] #talkListView{padding-top:8px}
 body[data-active-page="talkPage"] .talk-thread-head{z-index:50!important}
 body[data-active-page="talkPage"] .talk-head-actions{position:relative;z-index:51!important}
+
+/* --- v39 Talk refinements --- */
+.talk-notification-setting{
+  width:calc(100% - 20px);
+  margin:7px 10px 9px;
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:var(--card);
+  color:var(--text);
+  text-align:left;
+}
+.talk-notification-icon{
+  width:32px;height:32px;border-radius:50%;
+  display:grid;place-items:center;background:var(--soft);font-size:16px;
+}
+.talk-notification-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.talk-notification-copy strong{font-size:13px}
+.talk-notification-copy small{font-size:10px;color:var(--muted)}
+.talk-notification-chevron{font-size:22px;color:var(--muted)}
+
+.group-talk-row-wrap{border-bottom:1px solid var(--line)}
+.group-talk-row{background:linear-gradient(90deg,rgba(244,180,0,.06),transparent)}
+.group-avatar{
+  width:36px;height:36px;min-width:36px;border-radius:50%;
+  display:grid;place-items:center;background:var(--soft);font-size:18px;
+}
+.group-avatar.small{width:34px;height:34px;min-width:34px;font-size:16px}
+.group-sender-name{
+  font-size:10px;line-height:1.1;color:var(--muted);
+  margin-left:3px;margin-bottom:1px;
+}
+.avatar-img{transition:none!important}
+
+/* --- v40 keep bottom tabs physically fixed while Home scrolls --- */
+
+/* prevent iOS/PWA scroll container transforms from carrying the nav with content */
+#mainView,
+#appShell,
+body,
+html{
+  transform:none!important;
+  perspective:none!important;
+  filter:none!important;
+}
+
+/* the nav belongs to the viewport, not to the scrolling page content */
+.bottom-nav{
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  bottom:calc(1px + env(safe-area-inset-bottom))!important;
+  z-index:100!important;
+  width:auto!important;
+  max-width:calc(100vw - 20px)!important;
+  margin:0!important;
+  contain:layout paint;
+  will-change:auto;
+}
+
+/* Home itself scrolls normally underneath the fixed nav */
+body[data-active-page="homePage"]{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+body[data-active-page="homePage"] #homePage{
+  overflow:visible!important;
+  min-height:0!important;
+}
+
+/* ensure content can pass behind the fixed tabs without pushing them */
+body[data-active-page="homePage"] main{
+  padding-bottom:calc(100px + env(safe-area-inset-bottom))!important;
+}
+
+/* avoid momentum-scroll wrappers moving the fixed nav on iOS */
+body[data-active-page="homePage"] #mainView{
+  overflow:visible!important;
+  height:auto!important;
+  min-height:100vh!important;
+}
