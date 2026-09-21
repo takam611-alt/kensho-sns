@@ -79,9 +79,68 @@ async function upload(file, kind) {
 function esc(s=""){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function when(iso){const d=new Date(iso);return d.toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}
 function initials(name=""){return esc(name.slice(0,1).toUpperCase()||"?")}
+const avatarPreloadCache = new Set();
+
+function preloadAvatar(url){
+  if(!url || avatarPreloadCache.has(url)) return;
+  avatarPreloadCache.add(url);
+  const img = new Image();
+  img.decoding = "async";
+  img.src = url;
+}
+
 function avatarHTML(m,size=""){
-  if(m?.avatar_url) return `<img class="avatar ${size}" src="${esc(m.avatar_url)}" alt="">`;
-  return `<div class="avatar fallback ${size}">${initials(m?.display_name||"?")}</div>`;
+  const name = m?.display_name || "?";
+  const fallback = initials(name);
+  if(m?.avatar_url){
+    preloadAvatar(m.avatar_url);
+    return `<span class="avatar-shell ${size}">
+      <span class="avatar fallback ${size} avatar-placeholder">${fallback}</span>
+      <img class="avatar ${size} avatar-img" src="${esc(m.avatar_url)}" alt="" loading="eager" decoding="async"
+        onload="this.classList.add('loaded');this.previousElementSibling?.classList.add('hidden')"
+        onerror="this.classList.add('hidden')">
+    </span>`;
+  }
+  return `<div class="avatar fallback ${size}">${fallback}</div>`;
+}
+
+async function compressAvatarFile(file, maxSize=256, quality=.82){
+  if(!file || !file.type?.startsWith("image/")) return file;
+
+  const objectUrl = URL.createObjectURL(file);
+  try{
+    const img = new Image();
+    img.decoding = "async";
+    await new Promise((resolve,reject)=>{
+      img.onload=resolve;
+      img.onerror=reject;
+      img.src=objectUrl;
+    });
+
+    const sw = img.naturalWidth || img.width;
+    const sh = img.naturalHeight || img.height;
+    if(!sw || !sh) return file;
+
+    const side = Math.min(sw,sh);
+    const sx = Math.floor((sw-side)/2);
+    const sy = Math.floor((sh-side)/2);
+
+    const canvas = document.createElement("canvas");
+    canvas.width=maxSize;
+    canvas.height=maxSize;
+    const ctx=canvas.getContext("2d",{alpha:false});
+    ctx.imageSmoothingEnabled=true;
+    ctx.imageSmoothingQuality="high";
+    ctx.drawImage(img,sx,sy,side,side,0,0,maxSize,maxSize);
+
+    const blob = await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));
+    if(!blob) return file;
+
+    const base=(file.name||"avatar").replace(/\.[^.]+$/,"");
+    return new File([blob],`${base}.jpg`,{type:"image/jpeg",lastModified:Date.now()});
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 async function showAuth(msg=""){
   $("#authMsg").textContent=msg;
@@ -684,12 +743,24 @@ async function loadMembers(){
 async function loadProfile(){
   const d=await api("profile"); const m=d.member; state.me=m;
   $("#profileName").value=m.display_name||"";$("#profileBio").value=m.bio||"";
-  if(m.avatar_url){$("#profileAvatar").src=m.avatar_url;$("#profileAvatar").classList.remove("hidden");$("#profileFallback").classList.add("hidden")}
+  if(m.avatar_url){preloadAvatar(m.avatar_url);$("#profileAvatar").decoding="async";$("#profileAvatar").src=m.avatar_url;$("#profileAvatar").classList.remove("hidden");$("#profileFallback").classList.add("hidden")}
   else{$("#profileAvatar").classList.add("hidden");$("#profileFallback").classList.remove("hidden");$("#profileFallback").textContent=(m.display_name||"?").slice(0,1)}
 }
 $("#avatarInput").onchange=async e=>{
-  const f=e.target.files[0]; if(!f)return; $("#profileMsg").textContent="アップロード中…";
-  try{await upload(f,"avatar");$("#profileMsg").textContent="アイコンを変更しました";await loadProfile()}catch(err){$("#profileMsg").textContent=err.message}
+  const f=e.target.files[0];
+  if(!f)return;
+  $("#profileMsg").textContent="画像を最適化中…";
+  try{
+    const optimized=await compressAvatarFile(f,256,.82);
+    $("#profileMsg").textContent="アップロード中…";
+    await upload(optimized,"avatar");
+    $("#profileMsg").textContent="アイコンを変更しました";
+    await loadProfile();
+  }catch(err){
+    $("#profileMsg").textContent=err.message;
+  }finally{
+    e.target.value="";
+  }
 }
 $("#saveProfile").onclick=async()=>{
   $("#profileMsg").textContent="";
