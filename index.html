@@ -222,8 +222,8 @@
     </div>
   </dialog>
 
-  <dialog id="messageActionsDialog" class="simple-sheet-dialog">
-    <div class="simple-sheet">
+  <dialog id="messageActionsDialog" class="message-context-dialog">
+    <div class="message-context-card">
       <div class="reaction-picker" aria-label="リアクション">
         <button type="button" data-reaction="❤️">❤️</button>
         <button type="button" data-reaction="👍">👍</button>
@@ -232,12 +232,16 @@
         <button type="button" data-reaction="😢">😢</button>
         <button type="button" data-reaction="🙏">🙏</button>
       </div>
-      <button id="actionReply" class="sheet-row" type="button">↩︎ 返信</button>
-      <button id="actionCopy" class="sheet-row" type="button">コピー</button>
-      <button id="actionPin" class="sheet-row" type="button">📌 固定</button>
-      <button id="actionDeleteSelf" class="sheet-row danger-row" type="button">自分の画面から削除</button>
-      <button id="actionDeleteAll" class="sheet-row danger-row hidden" type="button">送信取消</button>
-      <button id="closeMessageActions" class="sheet-row" type="button">キャンセル</button>
+
+      <div id="messageActionPreview" class="message-action-preview"></div>
+
+      <div class="context-actions">
+        <button id="actionCopy" class="context-row" type="button"><span class="context-icon">▣</span><span>コピー</span></button>
+        <button id="actionPin" class="context-row" type="button"><span class="context-icon">📌</span><span>ピン留め</span></button>
+        <button id="actionDeleteSelf" class="context-row danger-row" type="button"><span class="context-icon">🗑</span><span>自分の画面から削除</span></button>
+        <button id="actionDeleteAll" class="context-row danger-row hidden" type="button"><span class="context-icon">🗑</span><span>送信取消</span></button>
+        <button id="closeMessageActions" class="context-row cancel-row" type="button"><span class="context-icon">✕</span><span>キャンセル</span></button>
+      </div>
     </div>
   </dialog>
 

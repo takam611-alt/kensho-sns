@@ -397,6 +397,12 @@ function bindMessagePressActions(el, id){
   let lastTap = 0;
   let startX = 0;
   let startY = 0;
+  let currentX = 0;
+  let currentY = 0;
+  let swiping = false;
+  let repliedBySwipe = false;
+
+  const wrap = el.closest(".talk-bubble-wrap");
 
   const clearPress = ()=>{
     if(pressTimer){
@@ -404,25 +410,69 @@ function bindMessagePressActions(el, id){
       pressTimer = null;
     }
   };
+
+  const resetSwipe = ()=>{
+    if(wrap){
+      wrap.classList.remove("swiping-reply","reply-ready");
+      wrap.style.removeProperty("--reply-shift");
+    }
+    swiping = false;
+  };
+
   const startPress = (x, y)=>{
     clearPress();
     longPressed = false;
-    startX = x;
-    startY = y;
+    swiping = false;
+    repliedBySwipe = false;
+    startX = currentX = x;
+    startY = currentY = y;
     pressTimer = setTimeout(()=>{
+      if(swiping) return;
       longPressed = true;
       openMessageActions(id);
       if(navigator.vibrate) navigator.vibrate(10);
     }, 380);
   };
+
   const movePress = (x, y)=>{
-    if(Math.abs(x - startX) > 10 || Math.abs(y - startY) > 10){
-      clearPress();
+    currentX = x;
+    currentY = y;
+    const dx = x - startX;
+    const dy = y - startY;
+
+    if(Math.abs(dx) > 8 || Math.abs(dy) > 8) clearPress();
+
+    // Swipe LEFT to quote-reply.
+    if(dx < -10 && Math.abs(dx) > Math.abs(dy) * 1.15){
+      swiping = true;
+      const shift = Math.max(-72, dx * .72);
+      if(wrap){
+        wrap.classList.add("swiping-reply");
+        wrap.style.setProperty("--reply-shift",`${shift}px`);
+        wrap.classList.toggle("reply-ready", Math.abs(shift) >= 48);
+      }
     }
   };
+
   const endPress = ()=>{
     clearPress();
-    if(longPressed) return;
+
+    if(swiping){
+      const dx = currentX - startX;
+      if(dx <= -58){
+        const msg = state.talkMessages.find(x=>x.id===id);
+        if(msg && !msg.deleted_for_all){
+          repliedBySwipe = true;
+          if(navigator.vibrate) navigator.vibrate(8);
+          setReply(msg);
+        }
+      }
+      resetSwipe();
+      return;
+    }
+
+    if(longPressed || repliedBySwipe) return;
+
     const now = Date.now();
     if(now - lastTap < 300){
       lastTap = 0;
@@ -441,9 +491,10 @@ function bindMessagePressActions(el, id){
     if(!e.touches.length) return;
     const t = e.touches[0];
     movePress(t.clientX, t.clientY);
+    if(swiping) e.preventDefault();
   };
   el.ontouchend = ()=>endPress();
-  el.ontouchcancel = ()=>clearPress();
+  el.ontouchcancel = ()=>{ clearPress(); resetSwipe(); };
 
   el.onmousedown = e=>{
     if(e.button !== 0) return;
@@ -451,14 +502,35 @@ function bindMessagePressActions(el, id){
   };
   el.onmousemove = e=>movePress(e.clientX, e.clientY);
   el.onmouseup = ()=>endPress();
-  el.onmouseleave = ()=>clearPress();
+  el.onmouseleave = ()=>{ clearPress(); resetSwipe(); };
 }
 function openMessageActions(id){
   const m=state.talkMessages.find(x=>x.id===id);
   if(!m || m.deleted_for_all) return;
   state.talkSelectedMessage=m;
   $("#actionDeleteAll").classList.toggle("hidden", m.sender_id!==state.me?.id);
-  $("#messageActionsDialog").showModal();
+
+  const mine=m.sender_id===state.me?.id;
+  const preview=$("#messageActionPreview");
+  preview.innerHTML=`<div class="message-preview-bubble ${mine?"me":""}">${esc(messageBodyText(m))}<span>${talkTime(m.created_at)}</span></div>`;
+
+  const dlg=$("#messageActionsDialog");
+  const bubble=document.querySelector(`[data-action-message="${id}"]`);
+  if(bubble){
+    const r=bubble.getBoundingClientRect();
+    const vw=window.innerWidth;
+    const vh=window.visualViewport?.height || window.innerHeight;
+    const menuW=Math.min(300, vw-24);
+    const estimatedH=390;
+    let left=mine ? Math.min(vw-menuW-12, r.right-menuW) : Math.max(12, r.left);
+    left=Math.max(12, Math.min(left, vw-menuW-12));
+    let top=r.top-105;
+    if(top+estimatedH>vh-12) top=Math.max(12, vh-estimatedH-12);
+    if(top<12) top=Math.min(vh-estimatedH-12, r.bottom+8);
+    dlg.style.setProperty("--ctx-left",`${Math.max(12,left)}px`);
+    dlg.style.setProperty("--ctx-top",`${Math.max(12,top)}px`);
+  }
+  dlg.showModal();
 }
 
 $$("[data-reaction]").forEach(btn=>{
@@ -485,12 +557,14 @@ async function copyMessageText(text){
     const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();
   }
 }
-$("#actionReply").onclick=()=>{const m=state.talkSelectedMessage;$("#messageActionsDialog").close();if(m)setReply(m)};
 $("#actionCopy").onclick=async()=>{const m=state.talkSelectedMessage;if(m)await copyMessageText(messageBodyText(m));$("#messageActionsDialog").close()};
 $("#actionPin").onclick=async()=>{const m=state.talkSelectedMessage;if(m)await api("pin_message",{peer_id:state.talkPeer,message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
 $("#actionDeleteSelf").onclick=async()=>{const m=state.talkSelectedMessage;if(m&&confirm("このメッセージを自分の画面から削除しますか？"))await api("delete_message_self",{message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
 $("#actionDeleteAll").onclick=async()=>{const m=state.talkSelectedMessage;if(m&&confirm("このメッセージを送信取消しますか？"))await api("delete_message_all",{message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
 $("#closeMessageActions").onclick=()=>$("#messageActionsDialog").close();
+$("#messageActionsDialog").addEventListener("click",e=>{
+  if(e.target===$("#messageActionsDialog")) $("#messageActionsDialog").close();
+});
 
 function jumpToMessage(id){
   const el=document.querySelector(`[data-message="${id}"]`);
