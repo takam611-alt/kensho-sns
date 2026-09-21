@@ -2131,3 +2131,98 @@ main{
     padding-top:64px !important;
   }
 }
+
+/* --- v33 fixes --- */
+
+/* Force the floating brand band to hug only the icon + title.
+   This avoids iOS treating the fixed flex header as a wide block. */
+#mainView > .topbar.glass{
+  display:inline-flex !important;
+  width:fit-content !important;
+  inline-size:fit-content !important;
+  min-width:0 !important;
+  max-width:calc(100vw - 20px) !important;
+  left:10px !important;
+  right:auto !important;
+  transform:none !important;
+  justify-content:flex-start !important;
+  align-items:center !important;
+  overflow:hidden;
+}
+#mainView > .topbar.glass .topbar-left{
+  display:inline-flex !important;
+  width:fit-content !important;
+  flex:0 0 auto !important;
+}
+#mainView > .topbar.glass .topbar-left > div:last-child{
+  flex:0 0 auto !important;
+  width:auto !important;
+}
+
+/* Talk loading text should sit lower, not jammed against the Talk heading. */
+.talk-loading-state{
+  min-height:150px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:34px 12px 18px;
+  color:var(--muted);
+  font-size:13px;
+  text-align:center;
+}
+
+/* --- v34 top brand pill position/size tweak --- */
+
+/* move the floating "ゆでたまSNS" pill to the upper-right and make it a bit smaller */
+#mainView > .topbar.glass{
+  left:auto !important;
+  right:10px !important;
+  top:calc(6px + env(safe-area-inset-top)) !important;
+  max-width:calc(100vw - 20px) !important;
+  padding:7px 10px !important;
+  border-radius:16px !important;
+}
+
+#mainView > .topbar.glass .topbar-left{
+  gap:8px !important;
+}
+
+.topbar .egg-icon{
+  width:32px !important;
+  height:32px !important;
+}
+
+.topbar h2{
+  font-size:14px !important;
+}
+
+.topbar p{
+  font-size:10px !important;
+  line-height:1.1 !important;
+}
+
+main{
+  padding-top:60px !important;
+}
+
+@media(max-width:390px){
+  #mainView > .topbar.glass{
+    right:8px !important;
+    top:calc(5px + env(safe-area-inset-top)) !important;
+    padding:6px 9px !important;
+    border-radius:15px !important;
+  }
+
+  .topbar .egg-icon{
+    width:30px !important;
+    height:30px !important;
+  }
+
+  .topbar h2{
+    font-size:13px !important;
+  }
+
+  main{
+    padding-top:58px !important;
+  }
+}

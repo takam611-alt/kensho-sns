@@ -259,7 +259,7 @@ function updateTalkBadge(n){
 }
 async function loadTalkList(){
   const box=$("#talkList");
-  box.innerHTML='<div class="post-card"><div class="post-body">読み込み中…</div></div>';
+  box.innerHTML='<div class="talk-loading-state">読み込み中…</div>';
   try{
     const d=await api("talk_list");
     updateTalkBadge(d.unread_total||0);
