@@ -7,15 +7,12 @@ const API_URL = `${SUPABASE_URL}/functions/v1/sns-api`;
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const APP_NAME = "ゆでたまSNS";
-const LOAD_STARTED_AT = performance.now();
-const MIN_LOADING_MS = 1000;
-
-async function hideLoading(){
+async function hideLoading(immediate = false){
   const loader = document.querySelector("#loadingView");
   if (!loader) return;
-  const elapsed = performance.now() - LOAD_STARTED_AT;
-  const wait = Math.max(0, MIN_LOADING_MS - elapsed);
-  if (wait) await new Promise(r => setTimeout(r, wait));
+  if (!immediate) {
+    await new Promise(r => setTimeout(r, 120));
+  }
   loader.classList.add("hidden");
 }
 
@@ -75,7 +72,7 @@ async function showAuth(msg=""){
   auth.classList.remove("hidden");
   main.hidden = true;
   main.classList.add("hidden");
-  await hideLoading();
+  await hideLoading(false);
 }
 async function showMain(){
   const auth = $("#authView");
@@ -86,15 +83,19 @@ async function showMain(){
   main.classList.remove("hidden");
   setShellLoading(true);
   document.title = APP_NAME;
-  await hideLoading();
+  await hideLoading(true);
 }
 async function boot(){
   if(!state.token) return await showAuth();
   try{
+    await showMain();
     const d=await call(AUTH_URL,{action:"me",token:state.token});
-    state.me=d.member; await showMain(); await loadFeed();
+    state.me=d.member;
+    await loadFeed();
   }catch(e){
-    localStorage.removeItem("kensho_session"); state.token=""; await showAuth("もう一度ログインしてください");
+    localStorage.removeItem("kensho_session");
+    state.token="";
+    await showAuth("もう一度ログインしてください");
   }
 }
 function setSession(d){
