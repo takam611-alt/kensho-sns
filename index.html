@@ -12,11 +12,10 @@
     <section id="authView" class="auth-screen">
       <div class="auth-bg"></div>
       <div class="auth-card-wrap">
-        <div class="brand-hero">
+        <div class="brand-hero compact-brand">
           <div class="brand-badge">ゆ</div>
           <div class="brand-copy">
             <h1>ゆでたまSNS</h1>
-            <p>招待メンバーだけの、ゆるくつながるコミュニティ。</p>
           </div>
         </div>
 
@@ -64,7 +63,6 @@
         <div class="topbar-left">
           <div class="app-icon">ゆ</div>
           <div>
-            <div class="eyebrow">招待制コミュニティ</div>
             <h2>ゆでたまSNS</h2>
           </div>
         </div>
@@ -75,33 +73,13 @@
 
       <main>
         <section id="homePage" class="page">
-          <div class="hero-panel">
-            <div class="hero-text">
-              <div class="eyebrow warm">WELCOME</div>
-              <h3 id="heroGreeting">おかえり</h3>
-              <p>みんなの投稿や当選報告を、ここで気軽にシェア。</p>
-            </div>
-            <div class="hero-stats">
-              <div class="stat-card">
-                <small>投稿</small>
-                <strong id="postCount">0</strong>
-              </div>
-              <div class="stat-card">
-                <small>メンバー</small>
-                <strong id="heroMemberCount">-</strong>
-              </div>
-            </div>
-          </div>
           <div id="feed" class="feed"></div>
         </section>
 
         <section id="postPage" class="page hidden">
-          <div class="sheet glass">
+          <div class="sheet glass compact-sheet">
             <div class="section-title-row">
-              <div>
-                <div class="eyebrow">CREATE</div>
-                <h3>新しい投稿</h3>
-              </div>
+              <h3>新しい投稿</h3>
             </div>
             <div class="chips">
               <button data-type="normal" class="chip active">ふつう</button>
@@ -118,18 +96,15 @@
         </section>
 
         <section id="membersPage" class="page hidden">
-          <div class="section-head section-card glass">
-            <div>
-              <div class="eyebrow">MEMBERS</div>
-              <h3>メンバー</h3>
-            </div>
+          <div class="section-head section-card glass compact-sheet">
+            <h3>メンバー</h3>
             <span id="memberCount"></span>
           </div>
           <div id="membersList" class="members"></div>
         </section>
 
         <section id="profilePage" class="page hidden">
-          <div class="profile-card glass">
+          <div class="profile-card glass compact-sheet">
             <div class="profile-cover"></div>
             <div class="avatar-wrap profile-avatar-wrap">
               <img id="profileAvatar" class="avatar xl" alt="">
@@ -137,7 +112,6 @@
             </div>
             <div class="profile-headline">
               <h3>プロフィール</h3>
-              <p>表示名やアイコンを変更できます</p>
             </div>
             <label class="file-btn compact">アイコン変更<input id="avatarInput" type="file" accept="image/*" hidden></label>
             <label>
