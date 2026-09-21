@@ -1928,3 +1928,89 @@ body[data-theme="blue"] .talk-bubble-wrap:not(.me) .talk-bubble{
 body.talk-thread-open .bottom-nav{
   bottom:calc(1px + env(safe-area-inset-bottom))!important;
 }
+
+/* --- v30 floating fixed translucent top header --- */
+
+/* keep main app below the fixed rounded top header */
+#mainView{
+  position:relative;
+}
+main{
+  padding-top:74px !important;
+}
+
+/* floating glass header */
+.topbar{
+  position:fixed !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  top:calc(8px + env(safe-area-inset-top)) !important;
+  width:min(calc(100% - 20px), 736px) !important;
+  z-index:30 !important;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 14px !important;
+  border-radius:20px !important;
+  border:1px solid rgba(255,255,255,.38) !important;
+  background:rgba(255,255,255,.68) !important;
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  box-shadow:0 10px 30px rgba(15,20,25,.10);
+}
+
+/* make header blend nicely in each theme */
+body[data-theme="dark"] .topbar{
+  background:rgba(21,32,43,.68) !important;
+  border-color:rgba(255,255,255,.10) !important;
+  box-shadow:0 12px 34px rgba(0,0,0,.28);
+}
+body[data-theme="warm"] .topbar{
+  background:rgba(255,248,241,.72) !important;
+}
+body[data-theme="blue"] .topbar{
+  background:rgba(246,251,255,.72) !important;
+}
+
+.topbar-left{
+  gap:10px !important;
+}
+.topbar h2{
+  font-size:17px !important;
+  line-height:1.1;
+}
+.topbar .egg-icon{
+  flex:none;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.58);
+  border:1px solid rgba(15,20,25,.06);
+}
+body[data-theme="dark"] .topbar .egg-icon{
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,255,255,.10);
+}
+
+/* thread view still takes over cleanly */
+body.talk-thread-open .topbar{
+  display:none !important;
+}
+body.talk-thread-open #talkThreadView:not(.hidden){
+  top:0 !important;
+}
+
+/* slightly reduce top spacing on very small screens */
+@media(max-width:390px){
+  .topbar{
+    width:calc(100% - 16px) !important;
+    top:calc(6px + env(safe-area-inset-top)) !important;
+    border-radius:18px !important;
+    padding:9px 12px !important;
+  }
+  main{
+    padding-top:70px !important;
+  }
+}
