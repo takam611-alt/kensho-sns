@@ -95,21 +95,6 @@
           <div id="feed" class="feed"></div>
         </section>
 
-        <section id="postPage" class="page hidden">
-          <div class="sheet glass compact-sheet">
-            <div class="section-title-row">
-              <h3>新しい投稿</h3>
-            </div>
-            <textarea id="postBody" maxlength="5000" placeholder="何を共有する？"></textarea>
-            <div id="postPreview"></div>
-            <div class="post-submit-row">
-              <button id="submitPost" class="primary post-submit-btn">投稿する</button>
-              <label class="file-btn modern-upload post-photo-btn" aria-label="写真を追加" title="写真を追加">📷<input id="postImage" type="file" accept="image/*" hidden></label>
-            </div>
-            <p id="postMsg" class="message"></p>
-          </div>
-        </section>
-
         <section id="membersPage" class="page hidden">
           <div class="section-head section-card glass compact-sheet">
             <h3>メンバー</h3>
@@ -137,6 +122,25 @@
               <span>ひとこと</span>
               <textarea id="profileBio" maxlength="160" placeholder="ひとこと紹介"></textarea>
             </label>
+
+            <div class="theme-settings">
+              <span class="theme-label">画面テーマ</span>
+              <div class="theme-options">
+                <button type="button" class="theme-option active" data-theme="light">
+                  <i class="theme-dot light-dot"></i><span>ライト</span>
+                </button>
+                <button type="button" class="theme-option" data-theme="dark">
+                  <i class="theme-dot dark-dot"></i><span>ダーク</span>
+                </button>
+                <button type="button" class="theme-option" data-theme="warm">
+                  <i class="theme-dot warm-dot"></i><span>あたたか</span>
+                </button>
+                <button type="button" class="theme-option" data-theme="blue">
+                  <i class="theme-dot blue-dot"></i><span>ブルー</span>
+                </button>
+              </div>
+            </div>
+
             <button id="saveProfile" class="primary">保存</button>
             <button id="logoutBtn" class="danger ghost">ログアウト</button>
             <p id="profileMsg" class="message"></p>
@@ -144,14 +148,35 @@
         </section>
       </main>
 
+      <button id="composeFab" class="compose-fab" aria-label="投稿する" title="投稿する">✍️</button>
+
       <nav class="bottom-nav glass">
         <button data-page="homePage" class="nav-item active"><span>🏠</span><small>ホーム</small></button>
-        <button data-page="postPage" class="nav-item"><span>✏️</span><small>投稿</small></button>
         <button data-page="membersPage" class="nav-item"><span>👥</span><small>メンバー</small></button>
         <button data-page="profilePage" class="nav-item"><span>🥹</span><small>Profile</small></button>
       </nav>
     </section>
   </div>
+
+
+  <dialog id="composeDialog" class="compose-dialog">
+    <div class="compose-sheet">
+      <div class="compose-head">
+        <button id="closeCompose" class="compose-close" type="button">✕</button>
+        <strong>新しい投稿</strong>
+        <span class="compose-spacer"></span>
+      </div>
+      <div class="compose-body">
+        <textarea id="postBody" maxlength="5000" placeholder="いまどうしてる？"></textarea>
+        <div id="postPreview"></div>
+        <div class="post-submit-row">
+          <label class="file-btn modern-upload post-photo-btn" aria-label="写真を追加" title="写真を追加">📷<input id="postImage" type="file" accept="image/*" hidden></label>
+          <button id="submitPost" class="primary post-submit-btn">投稿する</button>
+        </div>
+        <p id="postMsg" class="message"></p>
+      </div>
+    </div>
+  </dialog>
 
   <dialog id="commentDialog">
     <form method="dialog" class="dialog-head">

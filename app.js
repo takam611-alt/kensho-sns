@@ -7,6 +7,16 @@ const API_URL = `${SUPABASE_URL}/functions/v1/sns-api`;
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const APP_NAME = "ゆでたまSNS";
+
+const savedTheme = localStorage.getItem("yudetama_theme") || "light";
+document.body.dataset.theme = savedTheme;
+
+function applyTheme(theme){
+  document.body.dataset.theme = theme;
+  localStorage.setItem("yudetama_theme", theme);
+  $$(".theme-option").forEach(b => b.classList.toggle("active", b.dataset.theme === theme));
+}
+
 async function hideLoading(immediate = false){
   const loader = document.querySelector("#loadingView");
   if (!loader) return;
@@ -205,6 +215,17 @@ $("#commentForm").onsubmit=async e=>{
   }
 }
 
+
+$("#composeFab").onclick=()=>{
+  $("#postMsg").textContent="";
+  $("#composeDialog").showModal();
+  setTimeout(()=>$("#postBody").focus(),80);
+};
+$("#closeCompose").onclick=()=>$("#composeDialog").close();
+$("#composeDialog").addEventListener("click",e=>{
+  if(e.target === $("#composeDialog")) $("#composeDialog").close();
+});
+
 $("#postImage").onchange=e=>{
   const f=e.target.files[0]; $("#postPreview").innerHTML=f?`<img src="${URL.createObjectURL(f)}" alt="">`:"";
 }
@@ -214,8 +235,10 @@ $("#submitPost").onclick=async()=>{
     let imagePath=null; const f=$("#postImage").files[0];
     if(f){$("#postMsg").textContent="画像をアップロード中…";imagePath=(await upload(f,"post")).path}
     await api("create_post",{body:$("#postBody").value,post_type:"normal",image_path:imagePath});
-    $("#postBody").value="";$("#postImage").value="";$("#postPreview").innerHTML="";$("#postMsg").textContent="投稿しました";
-    await go("homePage"); await loadFeed();
+    $("#postBody").value="";$("#postImage").value="";$("#postPreview").innerHTML="";$("#postMsg").textContent="";
+    $("#composeDialog").close();
+    await go("homePage");
+    await loadFeed();
   }catch(e){$("#postMsg").textContent=e.message}
 }
 
@@ -238,6 +261,12 @@ $("#saveProfile").onclick=async()=>{
   $("#profileMsg").textContent="";
   try{await api("update_profile",{display_name:$("#profileName").value,bio:$("#profileBio").value});$("#profileMsg").textContent="保存しました";await loadProfile()}catch(e){$("#profileMsg").textContent=e.message}
 }
+
+$$(".theme-option").forEach(btn=>{
+  btn.onclick=()=>applyTheme(btn.dataset.theme);
+});
+applyTheme(savedTheme);
+
 $("#logoutBtn").onclick=async()=>{
   try{await call(AUTH_URL,{action:"logout",token:state.token})}catch{}
   localStorage.removeItem("kensho_session");state.token="";state.me=null;showAuth();
