@@ -78,24 +78,28 @@ function urlBase64ToUint8Array(s){const p="=".repeat((4-s.length%4)%4),b=(s+p).r
 async function getPushRegistration(){if(!("serviceWorker" in navigator))return null;try{await navigator.serviceWorker.register("./sw.js?v=38");return await navigator.serviceWorker.ready}catch(e){console.warn("service worker registration failed",e);return null}}
 async function updatePushButton(){
   const btn=$("#talkNotificationSetting");
+  const icon=$("#talkNotificationIcon");
   const status=$("#talkNotificationStatus");
-  if(!btn||!status)return;
+  if(!btn||!icon||!status)return;
 
   btn.classList.remove("on","off","blocked","unsupported");
 
   if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){
+    icon.textContent="🔕";
     status.textContent="この端末は非対応";
     btn.classList.add("unsupported");
     btn.setAttribute("aria-label","端末通知：非対応");
     return;
   }
   if(!isStandaloneWebApp()){
+    icon.textContent="🔕";
     status.textContent="ホーム画面版で設定";
     btn.classList.add("off");
-    btn.setAttribute("aria-label","端末通知：ホーム画面版で設定");
+    btn.setAttribute("aria-label","端末通知：オフ");
     return;
   }
   if(Notification.permission==="denied"){
+    icon.textContent="🔕";
     status.textContent="許可されていません";
     btn.classList.add("blocked");
     btn.setAttribute("aria-label","端末通知：許可されていません");
@@ -104,6 +108,8 @@ async function updatePushButton(){
 
   const reg=await getPushRegistration();
   const sub=reg?await reg.pushManager.getSubscription():null;
+
+  icon.textContent=sub?"🔔":"🔕";
   status.textContent=sub?"オン":"オフ";
   btn.classList.add(sub?"on":"off");
   btn.setAttribute("aria-label",sub?"端末通知：オン":"端末通知：オフ");

@@ -9,15 +9,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="ゆでたまSNS">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=41">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=41">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=41">
-  <link rel="manifest" href="site.webmanifest?v=41">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=42">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=42">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=42">
+  <link rel="manifest" href="site.webmanifest?v=42">
   <style>
     .hidden{display:none!important}
     #loadingView{position:fixed;inset:0;z-index:9999;background:#fff}
   </style>
-  <link rel="stylesheet" href="styles.css?v=41">
+  <link rel="stylesheet" href="styles.css?v=42">
 </head>
 <body>
   <div id="appShell">
@@ -112,7 +112,7 @@
               <div class="talk-head-right">
                 <span id="talkUnread"></span>
                 <button id="talkNotificationSetting" class="talk-notification-bell" type="button" aria-label="端末通知" title="端末通知">
-                  🔔
+                  <span id="talkNotificationIcon" aria-hidden="true">🔕</span>
                   <span id="talkNotificationStatus" class="sr-only">設定を確認</span>
                 </button>
               </div>
@@ -292,6 +292,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=41"></script>
+  <script src="app.js?v=42"></script>
 </body>
 </html>
