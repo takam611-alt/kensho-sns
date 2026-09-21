@@ -99,8 +99,8 @@ async function loadFeed(){
         <div class="post-body">${esc(p.body||"")}</div>
         ${p.image_url?`<img class="post-image" src="${esc(p.image_url)}" alt="">`:""}
         <div class="post-actions">
-          <button class="like-btn ${p.liked_by_me?"active":""}" data-id="${p.id}">♡ ${countOf(p.likes)}</button>
           <button class="comment-btn" data-id="${p.id}">💬 ${countOf(p.comments)}</button>
+          <button class="like-btn ${p.liked_by_me?"active":""}" data-id="${p.id}">♡ ${countOf(p.likes)}</button>
         </div>
       </article>`).join("");
     $$(".like-btn").forEach(b=>b.onclick=()=>toggleLike(b));
@@ -138,7 +138,7 @@ async function openComments(id){
 async function loadComments(){
   const d=await api("comments",{post_id:state.currentPostId});
   $("#commentsList").innerHTML=d.comments.length?d.comments.map(c=>`
-    <div class="comment">${avatarHTML(c.members)}<div class="bubble"><strong>${esc(c.members?.display_name||"")}</strong><p>${esc(c.body)}</p></div></div>`).join(""):'<p>まだコメントはありません。</p>';
+    <div class="comment">${avatarHTML(c.members)}<div class="bubble"><strong>${esc(c.members?.display_name||"")}</strong><p>${esc(c.body)}</p></div></div>`).join(""):'<p class="comments-empty">まだコメントはありません。</p>';
 }
 $("#commentForm").onsubmit=async e=>{
   e.preventDefault();
