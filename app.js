@@ -9,6 +9,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const APP_NAME = "ゆでたまSNS";
 
 const savedTheme = localStorage.getItem("yudetama_theme") || "light";
+document.body.dataset.activePage="homePage";
 document.body.dataset.theme = savedTheme;
 
 function applyTheme(theme){
@@ -705,6 +706,7 @@ $("#logoutBtn").onclick=async()=>{
   localStorage.removeItem("kensho_session");state.token="";state.me=null;showAuth();
 }
 async function go(id){
+  document.body.dataset.activePage=id;
   if(id!=="talkPage"){
     clearInterval(state.talkTimer);
     state.talkTimer=null;

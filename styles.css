@@ -2014,3 +2014,74 @@ body.talk-thread-open #talkThreadView:not(.hidden){
     padding-top:70px !important;
   }
 }
+
+/* --- v31 spacing / viewport-fit refinements --- */
+
+/* composer sits immediately above the persistent circular tabs */
+#talkThreadView:not(.hidden){
+  bottom:calc(60px + env(safe-area-inset-bottom))!important;
+}
+.talk-form{
+  min-height:46px!important;
+  padding:4px 8px 4px!important;
+}
+.talk-form input{
+  height:36px!important;
+}
+.talk-form .mini{
+  height:36px!important;
+}
+body.talk-thread-open .bottom-nav{
+  bottom:calc(1px + env(safe-area-inset-bottom))!important;
+}
+
+/* tighten vertical spacing between chat messages */
+.talk-messages{
+  gap:2px!important;
+  padding-top:7px!important;
+  padding-bottom:8px!important;
+}
+.talk-bubble-wrap{
+  margin:0!important;
+}
+.message-stack{
+  gap:1px!important;
+}
+.message-meta{
+  min-height:12px!important;
+  padding-top:0!important;
+  line-height:1!important;
+}
+.reaction-summary{
+  min-height:0!important;
+}
+.reaction-chip{
+  min-height:18px!important;
+  padding:1px 4px!important;
+}
+.reply-preview{
+  margin-bottom:0!important;
+}
+
+/* Talk list / Members use their own scroll area only if content exceeds one screen */
+body[data-active-page="talkPage"]:not(.talk-thread-open),
+body[data-active-page="membersPage"]{
+  overflow:hidden!important;
+}
+
+body[data-active-page="talkPage"]:not(.talk-thread-open) #talkPage:not(.hidden),
+body[data-active-page="membersPage"] #membersPage:not(.hidden){
+  height:calc(100svh - 74px - 74px - env(safe-area-inset-bottom))!important;
+  max-height:calc(100svh - 74px - 74px - env(safe-area-inset-bottom))!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* avoid artificial page height forcing scroll when content fits */
+body[data-active-page="talkPage"]:not(.talk-thread-open) main,
+body[data-active-page="membersPage"] main{
+  min-height:0!important;
+  padding-bottom:0!important;
+}
