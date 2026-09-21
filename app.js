@@ -43,6 +43,11 @@ const state = {
   currentPostId: null,
   talkPeer: null,
   talkTimer: null,
+  talkReplyTo: null,
+  talkMessages: [],
+  talkSelectedMessage: null,
+  talkMuted: false,
+  talkTypingTimer: null,
 };
 
 async function call(url, payload) {
@@ -271,7 +276,7 @@ async function loadTalkList(){
           </div>
         </button>
         <button class="talk-delete-btn" data-peer="${c.peer.id}" aria-label="トークを削除">•••</button>
-      </div>`).join(""):'<div class="post-card"><div class="post-body">まだトークはありません。</div></div>';
+      </div>`).join(""):'<div class="talk-empty">まだトークはありません。</div>';
     $$(".talk-row").forEach(b=>b.onclick=()=>openTalk(b.dataset.peer));
     $$(".talk-delete-btn").forEach(b=>b.onclick=async e=>{
       e.stopPropagation();
@@ -286,28 +291,179 @@ async function loadTalkList(){
     box.innerHTML=`<div class="post-card"><div class="post-body">${esc(e.message)}</div></div>`;
   }
 }
+
 async function openTalk(peerId){
   clearInterval(state.talkTimer);
   state.talkPeer=peerId;
+  state.talkReplyTo=null;
+  $("#replyBar").classList.add("hidden");
   $("#talkListView").classList.add("hidden");
   $("#talkThreadView").classList.remove("hidden");
+  document.body.classList.add("talk-thread-open");
+  updateViewportVars();
   await loadTalkMessages(true);
-  state.talkTimer=setInterval(()=>loadTalkMessages(false),3000);
+  await pingPresence(false);
+  state.talkTimer=setInterval(async()=>{
+    await loadTalkMessages(false);
+    await pingPresence(false);
+  },2500);
 }
-async function loadTalkMessages(scroll=true){
+
+function nearTalkBottom(){
+  const el=$("#talkMessages");
+  if(!el) return true;
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 110;
+}
+
+function scrollTalkToBottom(smooth=false){
+  const el=$("#talkMessages");
+  if(!el) return;
+  el.scrollTo({top:el.scrollHeight,behavior:smooth?"smooth":"auto"});
+}
+
+function messageBodyText(m){
+  return m.deleted_for_all ? "メッセージを削除しました" : m.body;
+}
+
+function renderTalkMessages(messages){
+  const q=$("#talkSearchInput")?.value.trim().toLowerCase() || "";
+  const filtered=q ? messages.filter(m=>messageBodyText(m).toLowerCase().includes(q)) : messages;
+  $("#talkMessages").innerHTML=filtered.length?filtered.map(m=>{
+    const mine=m.sender_id===state.me?.id;
+    const deleted=m.deleted_for_all;
+    const reply=m.reply_preview?`<button class="reply-preview" data-jump="${m.reply_preview.id}"><small>${m.reply_preview.sender_id===state.me?.id?"自分":"相手"}</small>${esc(m.reply_preview.body)}</button>`:"";
+    return `<div class="talk-bubble-wrap ${mine?"me":""}" data-message="${m.id}">
+      <div class="message-stack">
+        ${reply}
+        <div class="talk-bubble ${deleted?"deleted":""}" data-action-message="${m.id}">
+          <span class="message-text">${deleted?"メッセージを削除しました":esc(m.body)}</span>
+          <span class="talk-time">${talkTime(m.created_at)}${mine && m.read_at?" ・ 既読":""}</span>
+        </div>
+        ${!deleted?`<div class="message-reactions">
+          <button class="message-like ${m.reacted_by_me?"active":""}" data-like-message="${m.id}">♡${m.reaction_count?` ${m.reaction_count}`:""}</button>
+        </div>`:""}
+      </div>
+    </div>`;
+  }).join(""):'<div class="comments-empty">'+(q?"見つかりませんでした。":"まだメッセージはありません。")+'</div>';
+
+  $$("[data-like-message]").forEach(b=>b.onclick=()=>toggleMessageLike(b.dataset.likeMessage));
+  $$("[data-action-message]").forEach(b=>{
+    let lastTap=0;
+    b.onclick=e=>{
+      const now=Date.now();
+      if(now-lastTap<320){ lastTap=0; toggleMessageLike(b.dataset.actionMessage); return; }
+      lastTap=now;
+      setTimeout(()=>{ if(Date.now()-lastTap>=300 && lastTap){ openMessageActions(b.dataset.actionMessage); lastTap=0; } },320);
+    };
+  });
+  $$(".reply-preview").forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    jumpToMessage(b.dataset.jump);
+  });
+}
+
+async function loadTalkMessages(forceScroll=false){
   if(!state.talkPeer)return;
+  const keepBottom = forceScroll || nearTalkBottom();
   try{
     const d=await api("talk_messages",{peer_id:state.talkPeer});
-    $("#talkPeer").innerHTML=`${avatarHTML(d.peer)}<span>${esc(d.peer.display_name)}</span>`;
-    $("#talkMessages").innerHTML=d.messages.length?d.messages.map(m=>`
-      <div class="talk-bubble-wrap ${m.sender_id===state.me?.id?"me":""}">
-        <div class="talk-bubble">${esc(m.body)}<span class="talk-time">${talkTime(m.created_at)}</span></div>
-      </div>`).join(""):'<div class="comments-empty">まだメッセージはありません。</div>';
-    if(scroll) window.scrollTo(0,document.body.scrollHeight);
+    state.talkMessages=d.messages||[];
+    state.talkMuted=!!d.muted;
+    $("#talkPeer").innerHTML=`${avatarHTML(d.peer)}<div><span>${esc(d.peer.display_name)}</span><small>${d.online?"オンライン":"オフライン"}</small></div>`;
+    $("#typingIndicator").classList.toggle("hidden", !d.typing);
+    $("#toggleTalkMute").textContent=state.talkMuted?"通知をオン":"通知をオフ";
+    if(d.pinned){
+      $("#pinnedMessageText").textContent=messageBodyText(d.pinned).slice(0,60);
+      $("#pinnedMessageBar").dataset.messageId=d.pinned.id;
+      $("#pinnedMessageBar").classList.remove("hidden");
+    }else{
+      $("#pinnedMessageBar").classList.add("hidden");
+      $("#pinnedMessageBar").dataset.messageId="";
+    }
+    renderTalkMessages(state.talkMessages);
+    if(keepBottom) requestAnimationFrame(()=>scrollTalkToBottom(false));
     const list=await api("talk_list");
     updateTalkBadge(list.unread_total||0);
   }catch(e){}
 }
+
+async function toggleMessageLike(id){
+  try{
+    await api("toggle_message_reaction",{message_id:id});
+    await loadTalkMessages(false);
+  }catch(e){alert(e.message)}
+}
+
+function openMessageActions(id){
+  const m=state.talkMessages.find(x=>x.id===id);
+  if(!m || m.deleted_for_all) return;
+  state.talkSelectedMessage=m;
+  $("#actionDeleteAll").classList.toggle("hidden", m.sender_id!==state.me?.id);
+  $("#messageActionsDialog").showModal();
+}
+
+function setReply(m){
+  state.talkReplyTo=m;
+  $("#replyBarText").textContent=messageBodyText(m).slice(0,90);
+  $("#replyBar").classList.remove("hidden");
+  $("#talkInput").focus();
+}
+$("#cancelReply").onclick=()=>{state.talkReplyTo=null;$("#replyBar").classList.add("hidden")};
+
+async function copyMessageText(text){
+  try{await navigator.clipboard.writeText(text)}
+  catch{
+    const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();
+  }
+}
+$("#actionReply").onclick=()=>{const m=state.talkSelectedMessage;$("#messageActionsDialog").close();if(m)setReply(m)};
+$("#actionCopy").onclick=async()=>{const m=state.talkSelectedMessage;if(m)await copyMessageText(messageBodyText(m));$("#messageActionsDialog").close()};
+$("#actionPin").onclick=async()=>{const m=state.talkSelectedMessage;if(m)await api("pin_message",{peer_id:state.talkPeer,message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
+$("#actionDeleteSelf").onclick=async()=>{const m=state.talkSelectedMessage;if(m&&confirm("このメッセージを自分の画面から削除しますか？"))await api("delete_message_self",{message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
+$("#actionDeleteAll").onclick=async()=>{const m=state.talkSelectedMessage;if(m&&confirm("このメッセージを送信取消しますか？"))await api("delete_message_all",{message_id:m.id});$("#messageActionsDialog").close();await loadTalkMessages(false)};
+$("#closeMessageActions").onclick=()=>$("#messageActionsDialog").close();
+
+function jumpToMessage(id){
+  const el=document.querySelector(`[data-message="${id}"]`);
+  if(!el)return;
+  el.scrollIntoView({block:"center",behavior:"smooth"});
+  el.classList.add("message-highlight");
+  setTimeout(()=>el.classList.remove("message-highlight"),900);
+}
+$("#pinnedMessageBar").onclick=()=>jumpToMessage($("#pinnedMessageBar").dataset.messageId);
+
+$("#talkSearchBtn").onclick=()=>{$("#talkSearchBar").classList.remove("hidden");$("#talkSearchInput").focus()};
+$("#closeTalkSearch").onclick=()=>{$("#talkSearchInput").value="";$("#talkSearchBar").classList.add("hidden");renderTalkMessages(state.talkMessages)};
+$("#talkSearchInput").oninput=()=>renderTalkMessages(state.talkMessages);
+
+$("#talkSettingsBtn").onclick=()=>$("#talkSettingsDialog").showModal();
+$("#closeTalkSettings").onclick=()=>$("#talkSettingsDialog").close();
+$("#toggleTalkMute").onclick=async()=>{
+  state.talkMuted=!state.talkMuted;
+  await api("set_talk_mute",{peer_id:state.talkPeer,muted:state.talkMuted});
+  $("#toggleTalkMute").textContent=state.talkMuted?"通知をオン":"通知をオフ";
+};
+$("#deleteTalkFromSettings").onclick=async()=>{
+  if(!confirm("このトークを一覧から削除しますか？\n相手側の履歴は削除されません。")) return;
+  await api("hide_talk",{peer_id:state.talkPeer});
+  $("#talkSettingsDialog").close();
+  await closeTalkThread();
+};
+
+async function pingPresence(typing=false){
+  if(!state.talkPeer)return;
+  try{
+    const d=await api("presence",{peer_id:state.talkPeer,typing});
+    $("#typingIndicator").classList.toggle("hidden", !d.typing);
+  }catch(e){}
+}
+
+$("#talkInput").addEventListener("input",()=>{
+  clearTimeout(state.talkTypingTimer);
+  pingPresence(true);
+  state.talkTypingTimer=setTimeout(()=>pingPresence(false),2200);
+});
+
 $("#talkForm").onsubmit=async e=>{
   e.preventDefault();
   const input=$("#talkInput");
@@ -315,21 +471,51 @@ $("#talkForm").onsubmit=async e=>{
   if(!text||!state.talkPeer)return;
   const btn=e.currentTarget.querySelector("button");
   btn.disabled=true;
+  const replyId=state.talkReplyTo?.id||null;
   try{
-    await api("send_message",{peer_id:state.talkPeer,body:text});
+    await api("send_message",{peer_id:state.talkPeer,body:text,reply_to_id:replyId});
     input.value="";
+    state.talkReplyTo=null;
+    $("#replyBar").classList.add("hidden");
+    await pingPresence(false);
     await loadTalkMessages(true);
+    requestAnimationFrame(()=>input.focus({preventScroll:true}));
   }catch(err){alert(err.message)}
   finally{btn.disabled=false}
 };
-$("#backTalkList").onclick=async()=>{
+
+async function closeTalkThread(){
   clearInterval(state.talkTimer);
   state.talkTimer=null;
+  clearTimeout(state.talkTypingTimer);
+  await pingPresence(false);
   state.talkPeer=null;
+  state.talkReplyTo=null;
+  document.body.classList.remove("talk-thread-open");
   $("#talkThreadView").classList.add("hidden");
   $("#talkListView").classList.remove("hidden");
   await loadTalkList();
-};
+}
+$("#backTalkList").onclick=closeTalkThread;
+
+function updateViewportVars(){
+  const vv=window.visualViewport;
+  const h=vv?vv.height:window.innerHeight;
+  const top=vv?vv.offsetTop:0;
+  document.documentElement.style.setProperty("--vvh",`${h}px`);
+  document.documentElement.style.setProperty("--vvtop",`${top}px`);
+}
+if(window.visualViewport){
+  visualViewport.addEventListener("resize",()=>{
+    const inputFocused=document.activeElement===$("#talkInput");
+    const wasNear=nearTalkBottom();
+    updateViewportVars();
+    if(inputFocused&&wasNear) requestAnimationFrame(()=>scrollTalkToBottom(false));
+  });
+  visualViewport.addEventListener("scroll",updateViewportVars);
+}
+window.addEventListener("resize",updateViewportVars);
+updateViewportVars();
 $("#newTalkBtn").onclick=async()=>{
   const d=await api("members");
   const people=d.members.filter(m=>m.id!==state.me?.id);
@@ -401,12 +587,11 @@ $("#logoutBtn").onclick=async()=>{
   try{await call(AUTH_URL,{action:"logout",token:state.token})}catch{}
   localStorage.removeItem("kensho_session");state.token="";state.me=null;showAuth();
 }
-$("#refreshBtn").onclick=()=>loadFeed();
-
 async function go(id){
   if(id!=="talkPage"){
     clearInterval(state.talkTimer);
     state.talkTimer=null;
+    document.body.classList.remove("talk-thread-open");
   }
   $$(".page").forEach(p=>p.classList.add("hidden"));$("#"+id).classList.remove("hidden");
   $$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
@@ -422,5 +607,86 @@ async function go(id){
   if(id==="profilePage")await loadProfile();
 }
 $$(".nav-item").forEach(b=>b.onclick=()=>go(b.dataset.page));
+
+
+/* Pull to refresh on Home */
+let pullStartY = 0;
+let pullDistance = 0;
+let pulling = false;
+let pullRefreshing = false;
+
+function resetPullRefresh(){
+  const el = $("#pullRefresh");
+  if(!el) return;
+  pullDistance = 0;
+  pulling = false;
+  el.classList.remove("ready","refreshing");
+  el.style.transform = "translateY(-54px)";
+  const icon = el.querySelector(".pull-refresh-icon");
+  const text = el.querySelector(".pull-refresh-text");
+  if(icon) icon.textContent = "↓";
+  if(text) text.textContent = "下に引っ張って更新";
+}
+
+const homePage = $("#homePage");
+if(homePage){
+  homePage.addEventListener("touchstart", e=>{
+    if(pullRefreshing) return;
+    if(window.scrollY <= 0 && e.touches.length === 1){
+      pullStartY = e.touches[0].clientY;
+      pullDistance = 0;
+      pulling = true;
+    }
+  }, {passive:true});
+
+  homePage.addEventListener("touchmove", e=>{
+    if(!pulling || pullRefreshing) return;
+    const dy = e.touches[0].clientY - pullStartY;
+    if(dy <= 0){
+      pullDistance = 0;
+      return;
+    }
+    pullDistance = Math.min(90, dy * 0.55);
+    const el = $("#pullRefresh");
+    if(!el) return;
+    el.style.transform = `translateY(${pullDistance - 54}px)`;
+    const ready = pullDistance >= 58;
+    el.classList.toggle("ready", ready);
+    const icon = el.querySelector(".pull-refresh-icon");
+    const text = el.querySelector(".pull-refresh-text");
+    if(icon) icon.textContent = ready ? "↑" : "↓";
+    if(text) text.textContent = ready ? "離すと更新" : "下に引っ張って更新";
+  }, {passive:true});
+
+  homePage.addEventListener("touchend", async ()=>{
+    if(!pulling || pullRefreshing) return;
+    const shouldRefresh = pullDistance >= 58;
+    pulling = false;
+
+    if(!shouldRefresh){
+      resetPullRefresh();
+      return;
+    }
+
+    pullRefreshing = true;
+    const el = $("#pullRefresh");
+    const icon = el?.querySelector(".pull-refresh-icon");
+    const text = el?.querySelector(".pull-refresh-text");
+    el?.classList.add("refreshing");
+    if(el) el.style.transform = "translateY(0)";
+    if(icon) icon.textContent = "↻";
+    if(text) text.textContent = "更新中…";
+
+    try{
+      await loadFeed();
+      if(icon) icon.textContent = "✓";
+      if(text) text.textContent = "更新しました";
+      await new Promise(r=>setTimeout(r,450));
+    }finally{
+      pullRefreshing = false;
+      resetPullRefresh();
+    }
+  }, {passive:true});
+}
 
 boot();

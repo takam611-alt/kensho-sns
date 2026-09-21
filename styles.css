@@ -850,3 +850,257 @@ body[data-theme="dark"] .icon-btn{
   .compose-sheet,
   .member-picker-sheet{max-height:86svh !important}
 }
+
+/* --- v17 Talk empty state + pull to refresh --- */
+.talk-empty{
+  min-height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px 16px;
+  color:var(--muted);
+  font-size:12px;
+  text-align:center;
+  border-bottom:1px solid var(--line);
+  background:var(--bg);
+}
+
+#homePage{
+  position:relative;
+}
+
+.pull-refresh{
+  height:54px;
+  margin-top:-54px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  color:var(--muted);
+  font-size:11px;
+  background:var(--bg);
+  transform:translateY(-54px);
+  transition:transform .18s ease;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.pull-refresh-icon{
+  width:18px;
+  height:18px;
+  display:grid;
+  place-items:center;
+  font-size:15px;
+  line-height:1;
+  transition:transform .18s ease;
+}
+
+.pull-refresh.ready .pull-refresh-icon{
+  transform:rotate(180deg);
+}
+
+.pull-refresh.refreshing .pull-refresh-icon{
+  animation:pullSpin .8s linear infinite;
+}
+
+@keyframes pullSpin{
+  to{transform:rotate(360deg)}
+}
+
+/* --- v18 compose layout --- */
+.compose-head{
+  height:42px;
+  min-height:42px;
+  padding:0 5px;
+}
+
+.compose-body{
+  min-height:250px;
+  display:flex;
+  flex-direction:column;
+  padding:6px 12px 10px;
+}
+
+.compose-body textarea{
+  flex:1 1 auto;
+  min-height:105px;
+  padding:3px 2px 5px;
+}
+
+.compose-body #postPreview{
+  flex:none;
+}
+
+.compose-body .post-submit-row{
+  flex:none;
+  margin-top:auto;
+  padding-top:8px;
+  padding-bottom:0;
+  align-self:stretch;
+  justify-content:flex-end;
+}
+
+.compose-body .post-photo-btn,
+.compose-body .post-submit-btn{
+  align-self:flex-end;
+}
+
+/* --- v19 enhanced secret-talk style --- */
+body.talk-thread-open{overflow:hidden}
+body.talk-thread-open .bottom-nav,
+body.talk-thread-open .compose-fab{display:none!important}
+
+#talkThreadView:not(.hidden){
+  position:fixed;
+  z-index:20;
+  left:50%;
+  transform:translateX(-50%);
+  top:calc(48px + var(--vvtop,0px));
+  width:min(100%,760px);
+  height:calc(var(--vvh,100dvh) - 48px);
+  display:flex;
+  flex-direction:column;
+  background:var(--bg);
+  overflow:hidden;
+}
+.talk-thread-head{
+  position:relative!important;
+  top:auto!important;
+  flex:none;
+  height:46px;
+  min-height:46px;
+  grid-template-columns:38px 1fr auto;
+  padding:0 6px;
+  background:var(--card);
+}
+.talk-head-actions{display:flex;align-items:center}
+.talk-peer{min-width:0}
+.talk-peer>div{display:grid;line-height:1.05}
+.talk-peer span{font-size:13px}
+.talk-peer small{font-size:9px;color:var(--muted);font-weight:500;margin-top:3px}
+
+.talk-search-bar{
+  flex:none;
+  display:grid;
+  grid-template-columns:1fr 36px;
+  gap:5px;
+  align-items:center;
+  padding:6px 8px;
+  border-bottom:1px solid var(--line);
+  background:var(--card);
+}
+.talk-search-bar input{height:34px;border-radius:999px;background:var(--soft);border:0;padding:0 12px;color:var(--text)}
+
+.pinned-message-bar{
+  flex:none;
+  width:100%;
+  border:0;
+  border-bottom:1px solid var(--line);
+  background:var(--card);
+  color:var(--text);
+  padding:7px 10px;
+  display:flex;
+  gap:7px;
+  align-items:center;
+  text-align:left;
+  font-size:11px;
+}
+.pinned-message-bar span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.reply-bar{
+  flex:none;
+  display:grid;
+  grid-template-columns:1fr 34px;
+  gap:6px;
+  align-items:center;
+  padding:6px 9px;
+  border-top:1px solid var(--line);
+  background:var(--card);
+}
+.reply-bar small{display:block;color:var(--accent);font-size:9px;font-weight:700}
+#replyBarText{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.talk-messages{
+  flex:1 1 auto;
+  min-height:0!important;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:10px 10px 12px!important;
+  background:var(--bg);
+  overscroll-behavior:contain;
+}
+.message-stack{max-width:82%;display:grid;gap:2px}
+.talk-bubble-wrap.me .message-stack{justify-items:end}
+.talk-bubble-wrap:not(.me) .message-stack{justify-items:start}
+.talk-bubble{max-width:100%!important;user-select:none;-webkit-user-select:none}
+.talk-bubble.deleted{background:var(--soft)!important;color:var(--muted)!important;font-style:italic}
+.message-reactions{min-height:18px}
+.message-like{
+  border:0;background:transparent;color:var(--muted);
+  padding:1px 4px;font-size:11px;border-radius:999px
+}
+.message-like.active{color:#f91880}
+.reply-preview{
+  max-width:100%;
+  border:0;
+  border-left:3px solid var(--accent);
+  background:var(--soft);
+  color:var(--muted);
+  border-radius:6px;
+  padding:4px 7px;
+  text-align:left;
+  font-size:10px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.reply-preview small{display:block;color:var(--accent);font-size:8px}
+.message-highlight .talk-bubble{animation:msgFlash .9s ease}
+@keyframes msgFlash{0%,100%{box-shadow:none}35%{box-shadow:0 0 0 5px rgba(29,155,240,.22)}}
+
+.typing-indicator{
+  flex:none;
+  padding:2px 12px 4px;
+  font-size:10px;
+  color:var(--muted);
+  background:var(--card);
+}
+
+.talk-form{
+  position:relative!important;
+  left:auto!important;
+  transform:none!important;
+  bottom:auto!important;
+  width:100%!important;
+  flex:none;
+  padding:7px 8px calc(7px + env(safe-area-inset-bottom))!important;
+  border-top:1px solid var(--line);
+  background:var(--card);
+}
+.talk-form input{
+  font-size:16px!important; /* avoids iOS focus zoom */
+  height:38px!important;
+}
+.talk-form .mini{height:38px;padding:0 12px}
+
+.simple-sheet-dialog{
+  width:min(calc(100% - 24px),420px)!important;
+  margin:auto!important;
+  border:0!important;
+  border-radius:18px!important;
+  padding:0!important;
+  background:transparent!important;
+}
+.simple-sheet{overflow:hidden;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+.sheet-row{
+  width:100%;min-height:46px;padding:0 15px;
+  border:0;border-bottom:1px solid var(--line);
+  background:var(--card);color:var(--text);text-align:left;font-size:13px
+}
+.sheet-row:last-child{border-bottom:0}
+.danger-row{color:var(--danger)}
+.simple-sheet-dialog::backdrop{background:rgba(0,0,0,.30)}
+
+@media(max-width:600px){
+  #talkThreadView:not(.hidden){left:0;transform:none;width:100%}
+}

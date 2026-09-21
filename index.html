@@ -76,13 +76,14 @@
             <h2>ゆでたまSNS</h2>
           </div>
         </div>
-        <div class="topbar-actions">
-          <button id="refreshBtn" class="icon-btn" aria-label="更新">↻</button>
-        </div>
       </header>
 
       <main>
         <section id="homePage" class="page">
+          <div id="pullRefresh" class="pull-refresh" aria-hidden="true">
+            <div class="pull-refresh-icon">↓</div>
+            <div class="pull-refresh-text">下に引っ張って更新</div>
+          </div>
           <div id="feedLoading" class="feed-loading">
             <div class="egg-loader small" aria-label="読み込み中">
               <div class="egg-shadow"></div>
@@ -112,10 +113,32 @@
             <div class="talk-thread-head">
               <button id="backTalkList" class="icon-btn" type="button">‹</button>
               <div id="talkPeer" class="talk-peer"></div>
+              <div class="talk-head-actions">
+                <button id="talkSearchBtn" class="icon-btn" type="button" aria-label="検索">⌕</button>
+                <button id="talkSettingsBtn" class="icon-btn" type="button" aria-label="設定">•••</button>
+              </div>
             </div>
+
+            <div id="talkSearchBar" class="talk-search-bar hidden">
+              <input id="talkSearchInput" type="search" placeholder="トーク内を検索">
+              <button id="closeTalkSearch" class="icon-btn" type="button">✕</button>
+            </div>
+
+            <button id="pinnedMessageBar" class="pinned-message-bar hidden" type="button">
+              <span>📌</span><span id="pinnedMessageText"></span>
+            </button>
+
+            <div id="replyBar" class="reply-bar hidden">
+              <div><small>返信</small><div id="replyBarText"></div></div>
+              <button id="cancelReply" class="icon-btn" type="button">✕</button>
+            </div>
+
             <div id="talkMessages" class="talk-messages"></div>
+
+            <div id="typingIndicator" class="typing-indicator hidden">入力中…</div>
+
             <form id="talkForm" class="talk-form">
-              <input id="talkInput" maxlength="2000" placeholder="メッセージ">
+              <input id="talkInput" maxlength="2000" placeholder="メッセージ" autocomplete="off">
               <button class="primary mini" type="submit">送信</button>
             </form>
           </div>
@@ -185,6 +208,30 @@
   </div>
 
 
+
+
+  <dialog id="talkSettingsDialog" class="simple-sheet-dialog">
+    <div class="simple-sheet">
+      <div class="compose-head">
+        <button id="closeTalkSettings" class="compose-close" type="button">✕</button>
+        <strong>トーク設定</strong>
+        <span></span>
+      </div>
+      <button id="toggleTalkMute" class="sheet-row" type="button">通知をオフ</button>
+      <button id="deleteTalkFromSettings" class="sheet-row danger-row" type="button">トークを削除</button>
+    </div>
+  </dialog>
+
+  <dialog id="messageActionsDialog" class="simple-sheet-dialog">
+    <div class="simple-sheet">
+      <button id="actionReply" class="sheet-row" type="button">↩︎ 返信</button>
+      <button id="actionCopy" class="sheet-row" type="button">コピー</button>
+      <button id="actionPin" class="sheet-row" type="button">📌 固定</button>
+      <button id="actionDeleteSelf" class="sheet-row danger-row" type="button">自分の画面から削除</button>
+      <button id="actionDeleteAll" class="sheet-row danger-row hidden" type="button">送信取消</button>
+      <button id="closeMessageActions" class="sheet-row" type="button">キャンセル</button>
+    </div>
+  </dialog>
 
   <dialog id="memberPickerDialog" class="member-picker-dialog">
     <div class="member-picker-sheet">
