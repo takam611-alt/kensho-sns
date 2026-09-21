@@ -118,3 +118,72 @@ dialog{border:0;border-radius:16px;width:min(95vw,520px);max-height:78vh;padding
   width:100%;
   white-space:nowrap;
 }
+
+.loading-screen{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  background:#fff;
+}
+.egg-loader{
+  position:relative;
+  width:84px;
+  height:92px;
+  display:grid;
+  place-items:end center;
+}
+.egg-body{
+  position:absolute;
+  top:3px;
+  width:58px;
+  height:72px;
+  border:2px solid #0f1419;
+  background:#fff;
+  border-radius:52% 52% 48% 48% / 62% 62% 38% 38%;
+  animation:eggBounce .92s cubic-bezier(.45,.05,.55,.95) infinite;
+  transform-origin:center bottom;
+  box-shadow:0 3px 0 rgba(15,20,25,.04);
+}
+.egg-yolk{
+  position:absolute;
+  left:50%;
+  top:39px;
+  width:24px;
+  height:24px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:#ffb000;
+}
+.egg-shadow{
+  position:absolute;
+  bottom:2px;
+  width:50px;
+  height:8px;
+  border-radius:50%;
+  background:rgba(15,20,25,.14);
+  animation:eggShadow .92s cubic-bezier(.45,.05,.55,.95) infinite;
+}
+.loading-text{
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.04em;
+  color:#536471;
+}
+@keyframes eggBounce{
+  0%,100%{transform:translateY(0) scaleX(1) scaleY(1)}
+  18%{transform:translateY(2px) scaleX(1.05) scaleY(.95)}
+  50%{transform:translateY(-24px) scaleX(.97) scaleY(1.03)}
+  78%{transform:translateY(1px) scaleX(1.04) scaleY(.96)}
+}
+@keyframes eggShadow{
+  0%,100%{transform:scaleX(1);opacity:.16}
+  50%{transform:scaleX(.55);opacity:.08}
+}
+@media (prefers-reduced-motion: reduce){
+  .egg-body,.egg-shadow{animation:none}
+}

@@ -7,6 +7,11 @@ const API_URL = `${SUPABASE_URL}/functions/v1/sns-api`;
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const APP_NAME = "ゆでたまSNS";
+
+function hideLoading(){
+  const loader = document.querySelector("#loadingView");
+  if (loader) loader.classList.add("hidden");
+}
 const REGISTER_CODE = "472B76AEED";
 
 const state = {
@@ -49,11 +54,16 @@ function avatarHTML(m,size=""){
   return `<div class="avatar fallback ${size}">${initials(m?.display_name||"?")}</div>`;
 }
 function showAuth(msg=""){
-  $("#authView").classList.remove("hidden"); $("#mainView").classList.add("hidden"); $("#authMsg").textContent=msg;
+  $("#authView").classList.remove("hidden");
+  $("#mainView").classList.add("hidden");
+  $("#authMsg").textContent=msg;
+  hideLoading();
 }
 function showMain(){
-  $("#authView").classList.add("hidden"); $("#mainView").classList.remove("hidden");
+  $("#authView").classList.add("hidden");
+  $("#mainView").classList.remove("hidden");
   document.title = APP_NAME;
+  hideLoading();
 }
 async function boot(){
   if(!state.token) return showAuth();

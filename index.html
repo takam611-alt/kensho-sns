@@ -9,7 +9,17 @@
 </head>
 <body>
   <div id="appShell">
-    <section id="authView" class="auth-screen">
+    <section id="loadingView" class="loading-screen">
+      <div class="egg-loader" aria-label="読み込み中">
+        <div class="egg-shadow"></div>
+        <div class="egg-body">
+          <div class="egg-yolk"></div>
+        </div>
+      </div>
+      <div class="loading-text">ゆでたまSNS</div>
+    </section>
+
+    <section id="authView" class="auth-screen hidden">
       <div class="auth-bg"></div>
       <div class="auth-card-wrap">
         <div class="brand-hero compact-brand">
