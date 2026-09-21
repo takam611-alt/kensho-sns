@@ -2353,3 +2353,10 @@ main{
 .theme-option > *{
   display:none!important;
 }
+
+/* --- v38 push notification + Talk header visibility --- */
+body[data-active-page="talkPage"] #mainView > .topbar.glass{display:none!important}
+body[data-active-page="talkPage"] main{padding-top:0!important}
+body[data-active-page="talkPage"] #talkListView{padding-top:8px}
+body[data-active-page="talkPage"] .talk-thread-head{z-index:50!important}
+body[data-active-page="talkPage"] .talk-head-actions{position:relative;z-index:51!important}

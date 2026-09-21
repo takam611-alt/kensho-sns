@@ -65,6 +65,12 @@ async function call(url, payload) {
 async function api(action, extra={}) {
   return call(API_URL, { action, token:state.token, ...extra });
 }
+
+function isStandaloneWebApp(){return window.matchMedia?.("(display-mode: standalone)")?.matches||window.navigator.standalone===true}
+function urlBase64ToUint8Array(s){const p="=".repeat((4-s.length%4)%4),b=(s+p).replace(/-/g,"+").replace(/_/g,"/");return Uint8Array.from([...atob(b)].map(c=>c.charCodeAt(0)))}
+async function getPushRegistration(){if(!("serviceWorker" in navigator))return null;try{await navigator.serviceWorker.register("./sw.js?v=38");return await navigator.serviceWorker.ready}catch(e){console.warn("service worker registration failed",e);return null}}
+async function updatePushButton(){const btn=$("#enablePushNotifications");if(!btn)return;if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){btn.textContent="端末通知は非対応";btn.disabled=true;return}if(!isStandaloneWebApp()){btn.textContent="端末通知をオン";btn.disabled=false;return}if(Notification.permission==="denied"){btn.textContent="端末通知：許可されていません";btn.disabled=false;return}const reg=await getPushRegistration();const sub=reg?await reg.pushManager.getSubscription():null;btn.textContent=sub?"端末通知をオフ":"端末通知をオン";btn.disabled=false}
+async function enablePushNotifications(){if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){alert("この端末ではWeb通知を利用できません。");return}if(!isStandaloneWebApp()){alert("iPhoneではSafariの共有メニューから『ホーム画面に追加』したゆでたまSNSを開いて、もう一度設定してください。");return}if(Notification.permission==="denied"){alert("通知が拒否されています。iPhoneの『設定 → 通知 → ゆでたまSNS』から許可してください。");return}const reg=await getPushRegistration();if(!reg)throw new Error("通知の準備に失敗しました");let sub=await reg.pushManager.getSubscription();if(sub){await api("remove_push_subscription",{endpoint:sub.endpoint});await sub.unsubscribe();await updatePushButton();return}const permission=await Notification.requestPermission();if(permission!=="granted"){await updatePushButton();return}const key=await api("push_public_key");sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.public_key)});await api("save_push_subscription",{subscription:sub.toJSON(),user_agent:navigator.userAgent});await updatePushButton()}
 async function upload(file, kind) {
   const fd = new FormData();
   fd.append("action","upload_media");
@@ -171,6 +177,9 @@ async function boot(){
     state.me=d.member;
     await loadFeed();
     loadTalkList().catch(()=>{});
+    getPushRegistration().catch(()=>{});
+    const talkPeerFromPush=new URLSearchParams(location.search).get("talk");
+    if(talkPeerFromPush){history.replaceState(null,"",location.pathname);await go("talkPage");await openTalk(talkPeerFromPush);}
   }catch(e){
     localStorage.removeItem("kensho_session");
     state.token="";
@@ -432,7 +441,7 @@ async function loadTalkMessages(forceScroll=false){
     state.talkMuted=!!d.muted;
     $("#talkPeer").innerHTML=`${avatarHTML(d.peer)}<div><span>${esc(d.peer.display_name)}</span><small>${d.online?"オンライン":"オフライン"}</small></div>`;
     $("#typingIndicator").classList.toggle("hidden", !d.typing);
-    $("#toggleTalkMute").textContent=state.talkMuted?"通知をオン":"通知をオフ";
+    $("#toggleTalkMute").textContent=state.talkMuted?"このトークの通知をオン":"このトークの通知をオフ";
     if(d.pinned){
       $("#pinnedMessageText").textContent=messageBodyText(d.pinned).slice(0,60);
       $("#pinnedMessageBar").dataset.messageId=d.pinned.id;
@@ -613,12 +622,13 @@ $("#talkSearchBtn").onclick=()=>{$("#talkSearchBar").classList.remove("hidden");
 $("#closeTalkSearch").onclick=()=>{$("#talkSearchInput").value="";$("#talkSearchBar").classList.add("hidden");renderTalkMessages(state.talkMessages)};
 $("#talkSearchInput").oninput=()=>renderTalkMessages(state.talkMessages);
 
-$("#talkSettingsBtn").onclick=()=>$("#talkSettingsDialog").showModal();
+$("#talkSettingsBtn").onclick=async()=>{$("#talkSettingsDialog").showModal();await updatePushButton();};
 $("#closeTalkSettings").onclick=()=>$("#talkSettingsDialog").close();
+$("#enablePushNotifications").onclick=async()=>{const btn=$("#enablePushNotifications");btn.disabled=true;try{await enablePushNotifications()}catch(err){alert(err.message||"通知設定に失敗しました")}finally{await updatePushButton()}};
 $("#toggleTalkMute").onclick=async()=>{
   state.talkMuted=!state.talkMuted;
   await api("set_talk_mute",{peer_id:state.talkPeer,muted:state.talkMuted});
-  $("#toggleTalkMute").textContent=state.talkMuted?"通知をオン":"通知をオフ";
+  $("#toggleTalkMute").textContent=state.talkMuted?"このトークの通知をオン":"このトークの通知をオフ";
 };
 $("#deleteTalkFromSettings").onclick=async()=>{
   if(!confirm("このトークを一覧から削除しますか？\n相手側の履歴は削除されません。")) return;

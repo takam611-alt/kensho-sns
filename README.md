@@ -102,3 +102,13 @@ Publishable Key はブラウザ公開用のキーで、サーバーの Secret Ke
 - ホーム画面追加用のゆで卵アイコンを追加
 - apple-touch-icon / manifest を設定
 - CSS/JS を `?v=37` に更新
+
+
+## v38
+- iPhoneホーム画面版のWeb Push通知に対応
+- トーク設定に「端末通知をオン/オフ」を追加
+- 新着トークをPush通知（相手ごとの通知オフ設定も反映）
+- 通知タップで対象トークを開く
+- Talkタブでは右上操作が隠れないよう「ゆでたまSNS」帯を非表示
+- Service Worker `sw.js` を追加
+- CSS/JS を `?v=38` に更新
