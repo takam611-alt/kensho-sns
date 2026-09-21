@@ -21,3 +21,7 @@
 
 Supabase のプロジェクトURLと Publishable Key は `app.js` に設定済みです。
 Publishable Key はブラウザ公開用のキーで、サーバーの Secret Key は含めていません。
+
+
+## v25
+- CSS / JS に `?v=25` を付け、ホーム画面追加版でも更新が反映されやすいようにしました。
