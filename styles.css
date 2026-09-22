@@ -2644,3 +2644,39 @@ body[data-theme="blue"] #mainView > .topbar.glass,
 [data-theme="blue"] #mainView > .topbar.glass{
   background:rgba(239,248,255,.42)!important;
 }
+
+/* --- v48: clearly transparent top brand pill --- */
+#mainView > .topbar.glass{
+  background:rgba(255,255,255,.20)!important;
+  border:1px solid rgba(207,217,222,.20)!important;
+  box-shadow:0 4px 14px rgba(15,20,25,.05)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+
+#mainView > .topbar.glass .egg-icon{
+  background:rgba(255,255,255,.18)!important;
+  border-color:rgba(207,217,222,.20)!important;
+  box-shadow:none!important;
+}
+
+body[data-theme="dark"] #mainView > .topbar.glass,
+[data-theme="dark"] #mainView > .topbar.glass{
+  background:rgba(21,32,43,.22)!important;
+  border-color:rgba(255,255,255,.08)!important;
+}
+body[data-theme="dark"] #mainView > .topbar.glass .egg-icon,
+[data-theme="dark"] #mainView > .topbar.glass .egg-icon{
+  background:rgba(255,255,255,.06)!important;
+  border-color:rgba(255,255,255,.08)!important;
+}
+
+body[data-theme="warm"] #mainView > .topbar.glass,
+[data-theme="warm"] #mainView > .topbar.glass{
+  background:rgba(255,250,244,.20)!important;
+}
+
+body[data-theme="blue"] #mainView > .topbar.glass,
+[data-theme="blue"] #mainView > .topbar.glass{
+  background:rgba(246,251,255,.20)!important;
+}
