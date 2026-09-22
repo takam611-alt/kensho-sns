@@ -54,6 +54,7 @@ const state = {
   talkMode: "direct",
   talkPinnedId: null,
   groupMessages: [],
+  talkLoadSeq: 0,
 };
 
 async function call(url, payload) {
@@ -447,25 +448,25 @@ async function openTalk(peerId){
   clearInterval(state.talkTimer);
   state.talkMode="direct";
   state.talkPeer=peerId;
+  state.talkLoadSeq++;
+  const mySeq=state.talkLoadSeq;
+  $("#talkSettingsBtn").classList.remove("hidden");
   state.talkReplyTo=null;
-  state.talkPinnedId=null;
-  state.talkMessages=[];
-  state.talkPeerInfo=null;
-  $("#talkMessages").innerHTML=eggLoadingHTML();
-  $("#talkPeer").dataset.peerKey="";
-  $("#talkPeer").innerHTML=`<div class="talk-loading-peer"><div class="mini-egg"></div><div><span>読み込み中…</span><small>トークを開いています</small></div></div>`;
   $("#replyBar").classList.add("hidden");
   $("#pinnedMessageBar").classList.add("hidden");
   $("#typingIndicator").classList.add("hidden");
-  $("#talkSettingsBtn").classList.remove("hidden");
+  $("#talkMessages").innerHTML=eggLoadingHTML();
+  $("#talkPeer").dataset.peerKey="";
+  $("#talkPeer").innerHTML=`<div class="talk-loading-peer"><div class="mini-egg"></div><div><span>読み込み中…</span><small>トークを開いています</small></div></div>`;
   $("#talkListView").classList.add("hidden");
   $("#talkThreadView").classList.remove("hidden");
   document.body.classList.add("talk-thread-open");
   updateViewportVars();
-  await loadTalkMessages(true);
+  await loadTalkMessages(true, mySeq);
   await pingPresence(false);
   state.talkTimer=setInterval(async()=>{
-    await loadTalkMessages(false);
+    const seq=state.talkLoadSeq;
+    await loadTalkMessages(false, seq);
     await pingPresence(false);
   },2500);
 }
@@ -475,6 +476,7 @@ async function openGroupTalk(){
   clearInterval(state.talkTimer);
   state.talkMode="group";
   state.talkPeer="__group__";
+  state.talkLoadSeq++;
   state.talkReplyTo=null;
   state.talkPinnedId=null;
   $("#replyBar").classList.add("hidden");
@@ -493,11 +495,9 @@ async function openGroupTalk(){
 }
 
 async function loadGroupMessages(forceScroll=false){
-  if(state.talkMode!=="group")return;
   const keepBottom=forceScroll||nearTalkBottom();
   try{
     const d=await groupApi("list");
-    if(state.talkMode!=="group")return;
     state.groupMessages=d.messages||[];
     renderGroupMessages(state.groupMessages);
     if(keepBottom) requestAnimationFrame(()=>scrollTalkToBottom(false));
@@ -577,13 +577,13 @@ function renderTalkMessages(messages){
   });
 }
 
-async function loadTalkMessages(forceScroll=false){
-  const requestedPeer=state.talkPeer;
-  if(!requestedPeer || state.talkMode!=="direct")return;
+async function loadTalkMessages(forceScroll=false, seq=state.talkLoadSeq){
+  const peerId=state.talkPeer;
+  if(!peerId || state.talkMode!=="direct")return;
   const keepBottom = forceScroll || nearTalkBottom();
   try{
-    const d=await api("talk_messages",{peer_id:requestedPeer});
-    if(state.talkMode!=="direct" || state.talkPeer!==requestedPeer)return;
+    const d=await api("talk_messages",{peer_id:peerId});
+    if(seq!==state.talkLoadSeq || state.talkMode!=="direct" || state.talkPeer!==peerId)return;
     state.talkMessages=d.messages||[];
     state.talkPeerInfo=d.peer || null;
     state.talkMuted=!!d.muted;
@@ -609,8 +609,12 @@ async function loadTalkMessages(forceScroll=false){
     renderTalkMessages(state.talkMessages);
     if(keepBottom) requestAnimationFrame(()=>scrollTalkToBottom(false));
     const list=await api("talk_list");
-    updateTalkBadge(list.unread_total||0);
-  }catch(e){}
+    if(seq===state.talkLoadSeq) updateTalkBadge(list.unread_total||0);
+  }catch(e){
+    if(seq===state.talkLoadSeq && state.talkMode==="direct" && state.talkPeer===peerId){
+      $("#talkMessages").innerHTML=`<div class="talk-load-error">読み込みに失敗しました<br><small>${esc(e.message||"通信エラー")}</small></div>`;
+    }
+  }
 }
 
 async function setMessageReaction(id, emoji="❤️"){
@@ -855,6 +859,7 @@ async function closeTalkThread(){
   state.talkTimer=null;
   clearTimeout(state.talkTypingTimer);
   if(state.talkMode==="direct") await pingPresence(false);
+  state.talkLoadSeq++;
   state.talkPeer=null;
   state.talkReplyTo=null;
   state.talkMode="direct";
