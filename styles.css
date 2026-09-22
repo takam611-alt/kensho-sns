@@ -2616,3 +2616,9 @@ body[data-active-page="homePage"] #mainView{
   -webkit-clip-path:circle(50% at 50% 50%)!important;
   -webkit-tap-highlight-color:transparent!important;
 }
+
+/* --- v46: only one Talk loading indicator --- */
+.talk-peer-placeholder{
+  min-width:1px;
+  min-height:34px;
+}

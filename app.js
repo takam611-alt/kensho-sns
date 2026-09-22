@@ -467,7 +467,7 @@ async function openTalk(peerId){
   $("#typingIndicator").classList.add("hidden");
   $("#talkMessages").innerHTML=eggLoadingHTML();
   $("#talkPeer").dataset.peerKey="";
-  $("#talkPeer").innerHTML=`<div class="talk-loading-peer"><div class="mini-egg"></div><div><span>読み込み中…</span><small>トークを開いています</small></div></div>`;
+  $("#talkPeer").innerHTML=`<div class="talk-peer-placeholder" aria-hidden="true"></div>`;
   $("#talkListView").classList.add("hidden");
   $("#talkThreadView").classList.remove("hidden");
   document.body.classList.add("talk-thread-open");
