@@ -2486,3 +2486,97 @@ body[data-active-page="homePage"] #mainView{
 .talk-notification-bell.unsupported{
   opacity:.38;
 }
+
+/* --- v43: fully transparent bottom nav container --- */
+.bottom-nav{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  outline:0!important;
+}
+.bottom-nav::before,
+.bottom-nav::after{
+  content:none!important;
+  display:none!important;
+}
+
+/* --- v43: bouncing boiled-egg loader inside Talk --- */
+.talk-egg-loading{
+  width:100%;
+  min-height:180px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  color:var(--muted);
+  font-size:12px;
+}
+.talk-egg-bounce{
+  position:relative;
+  width:54px;
+  height:66px;
+  animation:talkEggBounce 1.1s ease-in-out infinite;
+}
+.talk-egg-body{
+  position:absolute;
+  left:10px;
+  top:3px;
+  width:34px;
+  height:42px;
+  border-radius:50% 50% 47% 47%;
+  background:#fff;
+  border:2px solid #cfd9de;
+  box-sizing:border-box;
+}
+.talk-egg-yolk{
+  position:absolute;
+  left:50%;
+  top:53%;
+  width:16px;
+  height:16px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:#f4b400;
+}
+.talk-egg-shadow{
+  position:absolute;
+  left:11px;
+  bottom:4px;
+  width:32px;
+  height:7px;
+  border-radius:50%;
+  background:rgba(15,20,25,.12);
+  animation:talkEggShadow 1.1s ease-in-out infinite;
+}
+.talk-egg-loading-text{line-height:1}
+@keyframes talkEggBounce{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  45%{transform:translateY(-13px) rotate(2deg)}
+  60%{transform:translateY(-9px) rotate(0)}
+}
+@keyframes talkEggShadow{
+  0%,100%{transform:scaleX(1);opacity:.12}
+  45%{transform:scaleX(.72);opacity:.06}
+  60%{transform:scaleX(.82);opacity:.08}
+}
+.talk-loading-peer{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.mini-egg{
+  width:26px;
+  height:31px;
+  border-radius:50% 50% 47% 47%;
+  background:radial-gradient(circle at 50% 56%,#f4b400 0 6px,#fff 6.5px 100%);
+  border:1.5px solid #cfd9de;
+  box-sizing:border-box;
+  animation:talkMiniEgg 1.1s ease-in-out infinite;
+}
+@keyframes talkMiniEgg{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-4px)}
+}

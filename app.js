@@ -382,7 +382,7 @@ function updateTalkBadge(n){
 }
 async function loadTalkList(){
   const box=$("#talkList");
-  box.innerHTML='<div class="talk-loading-state">読み込み中…</div>';
+  box.innerHTML=eggLoadingHTML();
   try{
     const [d,g]=await Promise.all([
       api("talk_list"),
@@ -447,9 +447,17 @@ async function openTalk(peerId){
   clearInterval(state.talkTimer);
   state.talkMode="direct";
   state.talkPeer=peerId;
-  $("#talkSettingsBtn").classList.remove("hidden");
   state.talkReplyTo=null;
+  state.talkPinnedId=null;
+  state.talkMessages=[];
+  state.talkPeerInfo=null;
+  $("#talkMessages").innerHTML=eggLoadingHTML();
+  $("#talkPeer").dataset.peerKey="";
+  $("#talkPeer").innerHTML=`<div class="talk-loading-peer"><div class="mini-egg"></div><div><span>読み込み中…</span><small>トークを開いています</small></div></div>`;
   $("#replyBar").classList.add("hidden");
+  $("#pinnedMessageBar").classList.add("hidden");
+  $("#typingIndicator").classList.add("hidden");
+  $("#talkSettingsBtn").classList.remove("hidden");
   $("#talkListView").classList.add("hidden");
   $("#talkThreadView").classList.remove("hidden");
   document.body.classList.add("talk-thread-open");
@@ -476,6 +484,8 @@ async function openGroupTalk(){
   $("#talkListView").classList.add("hidden");
   $("#talkThreadView").classList.remove("hidden");
   document.body.classList.add("talk-thread-open");
+  $("#talkMessages").innerHTML=eggLoadingHTML();
+  $("#talkPeer").dataset.peerKey="";
   $("#talkPeer").innerHTML=`<div class="group-avatar small">👥</div><div><span>全員のトーク</span><small>全メンバー</small></div>`;
   updateViewportVars();
   await loadGroupMessages(true);
@@ -483,9 +493,11 @@ async function openGroupTalk(){
 }
 
 async function loadGroupMessages(forceScroll=false){
+  if(state.talkMode!=="group")return;
   const keepBottom=forceScroll||nearTalkBottom();
   try{
     const d=await groupApi("list");
+    if(state.talkMode!=="group")return;
     state.groupMessages=d.messages||[];
     renderGroupMessages(state.groupMessages);
     if(keepBottom) requestAnimationFrame(()=>scrollTalkToBottom(false));
@@ -566,10 +578,12 @@ function renderTalkMessages(messages){
 }
 
 async function loadTalkMessages(forceScroll=false){
-  if(!state.talkPeer)return;
+  const requestedPeer=state.talkPeer;
+  if(!requestedPeer || state.talkMode!=="direct")return;
   const keepBottom = forceScroll || nearTalkBottom();
   try{
-    const d=await api("talk_messages",{peer_id:state.talkPeer});
+    const d=await api("talk_messages",{peer_id:requestedPeer});
+    if(state.talkMode!=="direct" || state.talkPeer!==requestedPeer)return;
     state.talkMessages=d.messages||[];
     state.talkPeerInfo=d.peer || null;
     state.talkMuted=!!d.muted;
