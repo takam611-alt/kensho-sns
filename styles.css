@@ -2622,3 +2622,25 @@ body[data-active-page="homePage"] #mainView{
   min-width:1px;
   min-height:34px;
 }
+
+/* --- v47 top brand pill translucency --- */
+#mainView > .topbar.glass{
+  background:rgba(255,255,255,.42)!important;
+  border:1px solid rgba(207,217,222,.32)!important;
+  box-shadow:0 2px 10px rgba(15,20,25,.06)!important;
+  -webkit-backdrop-filter:blur(10px) saturate(120%)!important;
+  backdrop-filter:blur(10px) saturate(120%)!important;
+}
+body[data-theme="dark"] #mainView > .topbar.glass,
+[data-theme="dark"] #mainView > .topbar.glass{
+  background:rgba(21,32,43,.42)!important;
+  border-color:rgba(255,255,255,.10)!important;
+}
+body[data-theme="warm"] #mainView > .topbar.glass,
+[data-theme="warm"] #mainView > .topbar.glass{
+  background:rgba(255,247,237,.42)!important;
+}
+body[data-theme="blue"] #mainView > .topbar.glass,
+[data-theme="blue"] #mainView > .topbar.glass{
+  background:rgba(239,248,255,.42)!important;
+}
