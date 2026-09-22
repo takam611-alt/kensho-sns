@@ -2584,3 +2584,35 @@ body[data-active-page="homePage"] #mainView{
   padding:20px;
 }
 .talk-load-error small{margin-top:5px;font-size:11px}
+
+/* --- v45: remove iOS rectangular compositor around floating tabs --- */
+.bottom-nav,
+.bottom-nav.glass{
+  background:none!important;
+  background-color:transparent!important;
+  border:none!important;
+  box-shadow:none!important;
+  outline:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  contain:none!important;
+  isolation:auto!important;
+  overflow:visible!important;
+  -webkit-transform:translateX(-50%)!important;
+}
+.bottom-nav::before,
+.bottom-nav::after{
+  display:none!important;
+  content:none!important;
+}
+
+/* iOS can show a square compositing tile around blurred circular buttons.
+   Keep the circular look, but remove the blur layer and hard-clip the circle. */
+.bottom-nav .nav-item{
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  overflow:hidden!important;
+  clip-path:circle(50% at 50% 50%)!important;
+  -webkit-clip-path:circle(50% at 50% 50%)!important;
+  -webkit-tap-highlight-color:transparent!important;
+}

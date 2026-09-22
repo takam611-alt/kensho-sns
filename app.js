@@ -76,7 +76,7 @@ async function groupApi(action, extra={}) {
 
 function isStandaloneWebApp(){return window.matchMedia?.("(display-mode: standalone)")?.matches||window.navigator.standalone===true}
 function urlBase64ToUint8Array(s){const p="=".repeat((4-s.length%4)%4),b=(s+p).replace(/-/g,"+").replace(/_/g,"/");return Uint8Array.from([...atob(b)].map(c=>c.charCodeAt(0)))}
-async function getPushRegistration(){if(!("serviceWorker" in navigator))return null;try{await navigator.serviceWorker.register("./sw.js?v=38");return await navigator.serviceWorker.ready}catch(e){console.warn("service worker registration failed",e);return null}}
+async function getPushRegistration(){if(!("serviceWorker" in navigator))return null;try{await navigator.serviceWorker.register("./sw.js?v=45");return await navigator.serviceWorker.ready}catch(e){console.warn("service worker registration failed",e);return null}}
 async function updatePushButton(){
   const btn=$("#talkNotificationSetting");
   const icon=$("#talkNotificationIcon");
@@ -128,6 +128,16 @@ async function upload(file, kind) {
   return data;
 }
 function esc(s=""){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function eggLoadingHTML(label="読み込み中…"){
+  return `<div class="talk-egg-loading" aria-label="${esc(label)}">
+    <div class="talk-egg-bounce">
+      <div class="talk-egg-shadow"></div>
+      <div class="talk-egg-body"><div class="talk-egg-yolk"></div></div>
+    </div>
+    <div class="talk-egg-loading-text">${esc(label)}</div>
+  </div>`;
+}
 function when(iso){const d=new Date(iso);return d.toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}
 function initials(name=""){return esc(name.slice(0,1).toUpperCase()||"?")}
 const avatarPreloadCache = new Set();
